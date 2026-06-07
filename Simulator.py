@@ -64,18 +64,48 @@ class Simulator:
 
         return served
 
-    def compute_reward(self, served, queue):
-        return served.sum() - 0.1 * queue.sum()
+    def compute_reward(self, served, queue, deadline_miss, avg_wait):
+        # Per-slice weights reflecting 5G slice SLA priorities
+        w_served   = np.array([1.0, 0.8, 0.5])   # eMBB: throughput; URLLC: moderate; mMTC: low
+        w_queue    = np.array([0.2, 0.5, 0.1])   # URLLC backlog is most damaging
+        w_deadline = np.array([0.5, 2.0, 0.3])   # URLLC deadline=5 → heavy miss penalty
+        w_wait     = np.array([0.05, 0.3, 0.02]) # URLLC latency SLA is strictest
+
+        return (
+            (w_served   * served).sum()
+            - (w_queue    * queue).sum()
+            - (w_deadline * deadline_miss).sum()
+            - (w_wait     * avg_wait).sum()
+        )
 
     def get_queue(self):
-      q = np.zeros(3)
-      for r in self.requests:
-          for i, s in enumerate(self.slice_names):
-              if not r.tasks[s].is_complete():
-                  q[i] += 1
-      return q
+        q = np.zeros(3)
+        for r in self.requests:
+            for i, s in enumerate(self.slice_names):
+                if not r.tasks[s].is_complete():
+                    q[i] += 1
+        return q
 
+    def get_deadline_miss_rate(self):
+        misses = np.zeros(3)
+        counts = np.zeros(3)
+        for r in self.requests:
+            for i, s in enumerate(self.slice_names):
+                if not r.tasks[s].is_complete():
+                    counts[i] += 1
+                    if r.tasks[s].is_deadline_missed(self.time):
+                        misses[i] += 1
+        return np.divide(misses, counts, out=np.zeros(3), where=counts > 0)
 
+    def get_avg_wait(self):
+        totals = np.zeros(3)
+        counts = np.zeros(3)
+        for r in self.requests:
+            for i, s in enumerate(self.slice_names):
+                if not r.tasks[s].is_complete():
+                    counts[i] += 1
+                    totals[i] += r.tasks[s].waiting_time(self.time)
+        return np.divide(totals, counts, out=np.zeros(3), where=counts > 0)
 
     def run(self):
         for t in range(self.steps):
@@ -90,21 +120,27 @@ class Simulator:
             served = self.serve(alloc.copy())
 
             queue = self.get_queue()
+            deadline_miss = self.get_deadline_miss_rate()
+            avg_wait = self.get_avg_wait()
 
-            reward = self.compute_reward(served, queue)
+            reward = self.compute_reward(served, queue, deadline_miss, avg_wait)
 
             self.demands_hist.append(demand)
             self.served_hist.append(served)
             self.queue_hist.append(queue)
             self.alloc_hist.append(alloc)
             self.reward_hist.append(reward)
+            self.deadline_miss_hist.append(deadline_miss)
+            self.avg_wait_hist.append(avg_wait)
 
         return (
             np.array(self.demands_hist),
             np.array(self.served_hist),
             np.array(self.queue_hist),
             np.array(self.alloc_hist),
-            np.array(self.reward_hist)
+            np.array(self.reward_hist),
+            np.array(self.deadline_miss_hist),
+            np.array(self.avg_wait_hist)
         )
 
     def visualize(self):
@@ -113,10 +149,12 @@ class Simulator:
         q = np.array(self.queue_hist)
         a = np.array(self.alloc_hist)
         r = np.array(self.reward_hist)
+        dm = np.array(self.deadline_miss_hist)
+        aw = np.array(self.avg_wait_hist)
 
         labels = ["eMBB", "URLLC", "mMTC"]
 
-        fig, axs = plt.subplots(5, 1, figsize=(12, 12))
+        fig, axs = plt.subplots(7, 1, figsize=(12, 16))
 
         for i in range(self.slices):
             axs[0].plot(d[:, i], label=labels[i])
@@ -141,6 +179,18 @@ class Simulator:
         t = np.arange(len(r))
         axs[4].plot(t, r)
         axs[4].set_title("Reward")
+
+        for i in range(self.slices):
+            axs[5].plot(dm[:, i], label=labels[i])
+        axs[5].set_title("Deadline Miss Rate")
+        axs[5].set_ylabel("Fraction")
+        axs[5].legend()
+
+        for i in range(self.slices):
+            axs[6].plot(aw[:, i], label=labels[i])
+        axs[6].set_title("Average Waiting Time per Slice")
+        axs[6].set_ylabel("Time steps")
+        axs[6].legend()
 
         plt.tight_layout()
         plt.show()

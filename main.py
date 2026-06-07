@@ -20,7 +20,7 @@ def run_simulator(
         job_size_mean=job_size_mean
     )
 
-    d, s, q, a, r = sim.run()
+    d, s, q, a, r, dm, aw = sim.run()
 
     sim.visualize()
 run_simulator()
