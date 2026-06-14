@@ -29,6 +29,7 @@ class Simulator:
         self.reward_hist = []
         self.deadline_miss_hist = []
         self.avg_wait_hist = []
+        self.state_hist = []
 
     def generate(self):
         n = np.random.poisson(self.arrival_rate)
@@ -78,6 +79,28 @@ class Simulator:
             - (w_wait     * avg_wait).sum()
         )
 
+    def get_state(self, demand, queue, deadline_miss, avg_wait):
+        # Returns a 12-element normalized observation vector (all values in [0, 1]):
+        #
+        #   Indices  Signal                  Cap used
+        #   -------  ----------------------  ---------------------------------
+        #   0–2      demand per slice        job_size_mean × 3 × arrival_rate
+        #   3–5      queue length per slice  arrival_rate × 20
+        #   6–8      deadline miss rate      already 0–1
+        #   9–11     avg wait per slice      per-slice deadlines [50, 5, 100]
+        #
+        # Normalization caps derived from slice deadlines and traffic parameters
+        max_demand   = self.job_size_mean * 3 * self.arrival_rate  # max job size × mean arrivals
+        max_queue    = self.arrival_rate * 20                       # generous backlog headroom
+        max_deadline = np.array([50.0, 5.0, 100.0])                # per-slice deadlines
+
+        norm_demand = np.clip(demand / max_demand, 0.0, 1.0)
+        norm_queue  = np.clip(queue  / max_queue,  0.0, 1.0)
+        norm_miss   = deadline_miss                                 # already 0–1
+        norm_wait   = np.clip(avg_wait / max_deadline,  0.0, 1.0)
+
+        return np.concatenate([norm_demand, norm_queue, norm_miss, norm_wait])
+
     def get_queue(self):
         q = np.zeros(3)
         for r in self.requests:
@@ -107,23 +130,33 @@ class Simulator:
                     totals[i] += r.tasks[s].waiting_time(self.time)
         return np.divide(totals, counts, out=np.zeros(3), where=counts > 0)
 
-    def run(self):
+    def run(self, target_update_freq=10):
+        current_state = np.zeros(12)  # initial observation before first step
+
         for t in range(self.steps):
             self.time = t
 
             self.generate()
-
             demand = self.aggregate_demand()
 
-            alloc = self.allocator.get_allocation(self.requests)
-
+            # Action is chosen from the pre-serving state (proper MDP formulation)
+            alloc = self.allocator.get_allocation(self.requests, current_state)
             served = self.serve(alloc.copy())
 
-            queue = self.get_queue()
+            queue         = self.get_queue()
             deadline_miss = self.get_deadline_miss_rate()
-            avg_wait = self.get_avg_wait()
+            avg_wait      = self.get_avg_wait()
+            reward        = self.compute_reward(served, queue, deadline_miss, avg_wait)
+            next_state    = self.get_state(demand, queue, deadline_miss, avg_wait)
 
-            reward = self.compute_reward(served, queue, deadline_miss, avg_wait)
+            # RL training hooks — no-ops for non-RL allocators
+            done = (t == self.steps - 1)
+            if hasattr(self.allocator, 'store') and self.allocator.last_action_idx is not None:
+                self.allocator.store(current_state, self.allocator.last_action_idx, reward, next_state, done)
+            if hasattr(self.allocator, 'train_step'):
+                self.allocator.train_step()
+            if hasattr(self.allocator, 'update_target') and t % target_update_freq == 0:
+                self.allocator.update_target()
 
             self.demands_hist.append(demand)
             self.served_hist.append(served)
@@ -132,6 +165,9 @@ class Simulator:
             self.reward_hist.append(reward)
             self.deadline_miss_hist.append(deadline_miss)
             self.avg_wait_hist.append(avg_wait)
+            self.state_hist.append(next_state)
+
+            current_state = next_state
 
         return (
             np.array(self.demands_hist),
