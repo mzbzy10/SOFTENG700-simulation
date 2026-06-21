@@ -31,7 +31,7 @@ class DQNAllocator:
         gamma=0.99,
         epsilon=1.0,
         epsilon_min=0.05,
-        epsilon_decay=0.995,
+        epsilon_decay=0.9995,
         batch_size=64,
         buffer_size=10000,
     ):
@@ -105,3 +105,21 @@ class DQNAllocator:
 
     def update_target(self):
         self.target_net.load_state_dict(self.q_net.state_dict())
+
+    def save(self, path):
+        torch.save({
+            'q_net':      self.q_net.state_dict(),
+            'target_net': self.target_net.state_dict(),
+            'optimizer':  self.optimizer.state_dict(),
+            'epsilon':    self.epsilon,
+        }, path)
+        print(f"Model saved to {path}")
+
+    def load(self, path, inference=False):
+        checkpoint = torch.load(path, weights_only=True)
+        self.q_net.load_state_dict(checkpoint['q_net'])
+        self.target_net.load_state_dict(checkpoint['target_net'])
+        self.optimizer.load_state_dict(checkpoint['optimizer'])
+        self.epsilon = 0.0 if inference else checkpoint['epsilon']
+        self.target_net.eval()
+        print(f"Model loaded from {path} ({'inference' if inference else 'training resume'} mode)")

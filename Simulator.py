@@ -31,6 +31,18 @@ class Simulator:
         self.avg_wait_hist = []
         self.state_hist = []
 
+    def reset(self):
+        self.time = 0
+        self.requests = []
+        self.demands_hist = []
+        self.served_hist = []
+        self.queue_hist = []
+        self.alloc_hist = []
+        self.reward_hist = []
+        self.deadline_miss_hist = []
+        self.avg_wait_hist = []
+        self.state_hist = []
+
     def generate(self):
         n = np.random.poisson(self.arrival_rate)
 
