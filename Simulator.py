@@ -65,18 +65,27 @@ class Simulator:
 
         return served
 
-    def compute_reward(self, served, queue, deadline_miss, avg_wait):
-        # Per-slice weights reflecting 5G slice SLA priorities
-        w_served   = np.array([1.0, 0.8, 0.5])   # eMBB: throughput; URLLC: moderate; mMTC: low
-        w_queue    = np.array([0.2, 0.5, 0.1])   # URLLC backlog is most damaging
-        w_deadline = np.array([0.5, 2.0, 0.3])   # URLLC deadline=5 → heavy miss penalty
-        w_wait     = np.array([0.05, 0.3, 0.02]) # URLLC latency SLA is strictest
+    def compute_reward(self, served, demand, queue, alloc, deadline_miss):
+        # throughput rate: fraction of demand actually served per slice (0–1)
+        throughput_rate = np.divide(served, demand, out=np.zeros(3), where=demand > 0)
+
+        # queue normalized against max expected backlog
+        max_queue = self.arrival_rate * 20
+        norm_queue = np.clip(queue / max_queue, 0, 1)
+
+        # fraction of total PRBs actually used
+        utilisation = alloc.sum() / self.allocator.total_prb
+
+        # slice-specific weights (all inputs now 0–1 so weights are directly comparable)
+        w_throughput = np.array([1.0, 0.5, 0.3])  # eMBB cares most about throughput
+        w_deadline   = np.array([0.5, 3.0, 0.2])  # URLLC deadline miss is heavily penalized
+        w_queue      = np.array([0.2, 0.8, 0.1])  # URLLC queue backlog is bad
 
         return (
-            (w_served   * served).sum()
-            - (w_queue    * queue).sum()
+            (w_throughput * throughput_rate).sum()
+            + 0.5 * utilisation
             - (w_deadline * deadline_miss).sum()
-            - (w_wait     * avg_wait).sum()
+            - (w_queue    * norm_queue).sum()
         )
 
     def get_state(self, demand, queue, deadline_miss, avg_wait):
@@ -146,7 +155,7 @@ class Simulator:
             queue         = self.get_queue()
             deadline_miss = self.get_deadline_miss_rate()
             avg_wait      = self.get_avg_wait()
-            reward        = self.compute_reward(served, queue, deadline_miss, avg_wait)
+            reward        = self.compute_reward(served, demand, queue, alloc, deadline_miss)
             next_state    = self.get_state(demand, queue, deadline_miss, avg_wait)
 
             # RL training hooks — no-ops for non-RL allocators

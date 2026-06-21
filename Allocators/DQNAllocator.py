@@ -38,10 +38,12 @@ class DQNAllocator:
         self.total_prb = total_prb
 
         # Enumerate all valid integer splits (a, b, c) with a+b+c=total_prb, each >= 1
+        step = 5
         self.actions = np.array([
             [a, b, total_prb - a - b]
-            for a in range(1, total_prb - 1)
-            for b in range(1, total_prb - a)
+            for a in range(step, total_prb - step + 1, step)
+            for b in range(step, total_prb - a, step)
+            if total_prb - a - b >= step
         ])
         n_actions = len(self.actions)
 
