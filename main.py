@@ -28,16 +28,14 @@ def run_simulator(
     episodes=10,
     steps=500,
     total_prb=50,
-    arrival_rate=5,
-    job_size_mean=10
+    arrival_rate=5
 ):
     allocator = allocator_cls(total_prb=total_prb)
 
     sim = Simulator(
         allocator=allocator,
         steps=steps,
-        arrival_rate=arrival_rate,
-        job_size_mean=job_size_mean
+        arrival_rate=arrival_rate
     )
 
     episode_rewards = []

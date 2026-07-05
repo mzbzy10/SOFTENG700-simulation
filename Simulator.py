@@ -1,26 +1,52 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from Request import Request
+from SliceTask import SliceTask
 
 class Simulator:
     def __init__(
         self,
         allocator,
         steps=100,
-        arrival_rate=5,
-        job_size_mean=10
+        arrival_rate=5
     ):
         self.allocator = allocator
         self.steps = steps
         self.arrival_rate = arrival_rate
-        self.job_size_mean = job_size_mean
 
         self.time = 0
         self.requests = []
 
         self.slices = 3
         self.slice_names = ["eMBB", "URLLC", "mMTC"]
+        self.slice_index = {s: i for i, s in enumerate(self.slice_names)}
+
+        # per-slice task size range (inclusive) and deadline
+        self.slice_config = {
+            "eMBB":  {"size_range": (20, 50), "deadline": 80},
+            "URLLC": {"size_range": (2, 8),   "deadline": 10},
+            "mMTC":  {"size_range": (1, 3),   "deadline": 100},
+        }
+
+        # eMBB ON/OFF burst state — its own independent arrival process
+        self.embb_on = True
+        self.embb_on_prob = 0.7   # probability of staying ON
+        self.embb_off_prob = 0.3  # probability of switching to ON from OFF
+        self.embb_on_rate = 8     # arrivals/step while ON
+        self.embb_off_rate = 1    # arrivals/step while OFF
+
+        # highest arrival rate each slice can hit, used to size demand normalization below
+        self.max_arrival_rate = {
+            "eMBB": self.embb_on_rate,
+            "URLLC": arrival_rate,
+            "mMTC": arrival_rate,
+        }
+
+        # max expected per-slice demand = largest task size x highest arrival rate
+        self.max_demand = np.array([
+            self.slice_config[s]["size_range"][1] * self.max_arrival_rate[s]
+            for s in self.slice_names
+        ])
 
         self.demands_hist = []
         self.served_hist = []
@@ -34,6 +60,7 @@ class Simulator:
     def reset(self):
         self.time = 0
         self.requests = []
+        self.embb_on = True
         self.demands_hist = []
         self.served_hist = []
         self.queue_hist = []
@@ -43,20 +70,45 @@ class Simulator:
         self.avg_wait_hist = []
         self.state_hist = []
 
-    def generate(self):
-        n = np.random.poisson(self.arrival_rate)
+    def generate_embb_arrivals(self):
+        # transition state
+        if self.embb_on:
+            self.embb_on = np.random.rand() < self.embb_on_prob
+        else:
+            self.embb_on = np.random.rand() < self.embb_off_prob
 
-        for _ in range(n):
-            self.requests.append(
-                Request(self.time, self.job_size_mean)
-            )
+        rate = self.embb_on_rate if self.embb_on else self.embb_off_rate
+        return np.random.poisson(rate)
+
+    def generate_urllc_arrivals(self):
+        return np.random.poisson(self.arrival_rate)
+
+    def generate_mmtc_arrivals(self):
+        return np.random.poisson(self.arrival_rate)
+
+    def make_task(self, slice_name):
+        config = self.slice_config[slice_name]
+        low, high = config["size_range"]
+        size = np.random.randint(low, high + 1)  # +1 since np.random.randint's high is exclusive
+
+        return SliceTask(slice_name, size, self.time, config["deadline"])
+
+    def generate(self):
+        arrivals = {
+            "eMBB": self.generate_embb_arrivals(),
+            "URLLC": self.generate_urllc_arrivals(),
+            "mMTC": self.generate_mmtc_arrivals(),
+        }
+
+        for slice_name, n in arrivals.items():
+            for _ in range(n):
+                self.requests.append(self.make_task(slice_name))
 
     def aggregate_demand(self):
         d = np.zeros(3)
 
-        for r in self.requests:
-            for i, s in enumerate(self.slice_names):
-                d[i] += r.tasks[s].remaining
+        for task in self.requests:
+            d[self.slice_index[task.slice_type]] += task.remaining
 
         return d
 
@@ -64,15 +116,15 @@ class Simulator:
         served = np.zeros(3)
         remaining_cap = alloc.copy().astype(float)
 
-        for r in self.requests:
-            for i, s in enumerate(self.slice_names):
-                if remaining_cap[i] > 0:
-                    used = r.tasks[s].serve(remaining_cap[i])
-                    served[i] += used
-                    remaining_cap[i] -= used
+        for task in self.requests:
+            i = self.slice_index[task.slice_type]
+            if remaining_cap[i] > 0:
+                used = task.serve(remaining_cap[i])
+                served[i] += used
+                remaining_cap[i] -= used
 
         self.requests = [
-            r for r in self.requests if not r.is_complete()
+            task for task in self.requests if not task.is_complete()
         ]
 
         return served
@@ -105,17 +157,18 @@ class Simulator:
         #
         #   Indices  Signal                  Cap used
         #   -------  ----------------------  ---------------------------------
-        #   0–2      demand per slice        job_size_mean × 3 × arrival_rate
+        #   0–2      demand per slice        max task size × max arrival rate (per slice)
         #   3–5      queue length per slice  arrival_rate × 20
         #   6–8      deadline miss rate      already 0–1
-        #   9–11     avg wait per slice      per-slice deadlines [50, 5, 100]
+        #   9–11     avg wait per slice      per-slice deadlines
         #
         # Normalization caps derived from slice deadlines and traffic parameters
-        max_demand   = self.job_size_mean * 3 * self.arrival_rate  # max job size × mean arrivals
         max_queue    = self.arrival_rate * 20                       # generous backlog headroom
-        max_deadline = np.array([50.0, 5.0, 100.0])                # per-slice deadlines
+        max_deadline = np.array([
+            self.slice_config[s]["deadline"] for s in self.slice_names
+        ])
 
-        norm_demand = np.clip(demand / max_demand, 0.0, 1.0)
+        norm_demand = np.clip(demand / self.max_demand, 0.0, 1.0)
         norm_queue  = np.clip(queue  / max_queue,  0.0, 1.0)
         norm_miss   = deadline_miss                                 # already 0–1
         norm_wait   = np.clip(avg_wait / max_deadline,  0.0, 1.0)
@@ -124,31 +177,30 @@ class Simulator:
 
     def get_queue(self):
         q = np.zeros(3)
-        for r in self.requests:
-            for i, s in enumerate(self.slice_names):
-                if not r.tasks[s].is_complete():
-                    q[i] += 1
+        for task in self.requests:
+            if not task.is_complete():
+                q[self.slice_index[task.slice_type]] += 1
         return q
 
     def get_deadline_miss_rate(self):
         misses = np.zeros(3)
         counts = np.zeros(3)
-        for r in self.requests:
-            for i, s in enumerate(self.slice_names):
-                if not r.tasks[s].is_complete():
-                    counts[i] += 1
-                    if r.tasks[s].is_deadline_missed(self.time):
-                        misses[i] += 1
+        for task in self.requests:
+            if not task.is_complete():
+                i = self.slice_index[task.slice_type]
+                counts[i] += 1
+                if task.is_deadline_missed(self.time):
+                    misses[i] += 1
         return np.divide(misses, counts, out=np.zeros(3), where=counts > 0)
 
     def get_avg_wait(self):
         totals = np.zeros(3)
         counts = np.zeros(3)
-        for r in self.requests:
-            for i, s in enumerate(self.slice_names):
-                if not r.tasks[s].is_complete():
-                    counts[i] += 1
-                    totals[i] += r.tasks[s].waiting_time(self.time)
+        for task in self.requests:
+            if not task.is_complete():
+                i = self.slice_index[task.slice_type]
+                counts[i] += 1
+                totals[i] += task.waiting_time(self.time)
         return np.divide(totals, counts, out=np.zeros(3), where=counts > 0)
 
     def run(self, target_update_freq=10):
