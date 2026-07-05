@@ -35,10 +35,14 @@ class Simulator:
         self.embb_on_rate = 8     # arrivals/step while ON
         self.embb_off_rate = 1    # arrivals/step while OFF
 
+        # URLLC periodic arrivals — deterministic, fixed batch every N steps
+        self.urllc_period = 2      # steps between arrivals
+        self.urllc_batch_size = 1  # tasks per arrival
+
         # highest arrival rate each slice can hit, used to size demand normalization below
         self.max_arrival_rate = {
             "eMBB": self.embb_on_rate,
-            "URLLC": arrival_rate,
+            "URLLC": self.urllc_batch_size,
             "mMTC": arrival_rate,
         }
 
@@ -81,7 +85,8 @@ class Simulator:
         return np.random.poisson(rate)
 
     def generate_urllc_arrivals(self):
-        return np.random.poisson(self.arrival_rate)
+        # deterministic periodic traffic: a fixed batch every N steps, none in between
+        return self.urllc_batch_size if self.time % self.urllc_period == 0 else 0
 
     def generate_mmtc_arrivals(self):
         return np.random.poisson(self.arrival_rate)
