@@ -3,6 +3,9 @@
 #models
 *.pt
 
+# generated diagnostic output
+tests/arrival_dashboard.html
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

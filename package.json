@@ -1,0 +1,10 @@
+{
+  "name": "softeng700-simulation",
+  "private": true,
+  "description": "Task runner shortcuts for the Python slicing simulation (see README.md)",
+  "scripts": {
+    "main": "python main.py",
+    "test": "python tests/arrival_analysis.py",
+    "test:arrivals": "python tests/arrival_analysis.py"
+  }
+}
