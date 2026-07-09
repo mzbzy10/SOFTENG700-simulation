@@ -257,54 +257,33 @@ class Simulator:
             np.array(self.avg_wait_hist)
         )
 
-    def visualize(self):
+    def visualize(self, episode_rewards=None):
         d = np.array(self.demands_hist)
         s = np.array(self.served_hist)
-        q = np.array(self.queue_hist)
-        a = np.array(self.alloc_hist)
         r = np.array(self.reward_hist)
-        dm = np.array(self.deadline_miss_hist)
-        aw = np.array(self.avg_wait_hist)
 
         labels = ["eMBB", "URLLC", "mMTC"]
+        colors = ["tab:blue", "tab:green", "tab:orange"]
 
-        fig, axs = plt.subplots(7, 1, figsize=(12, 16))
+        n_panels = 3 if episode_rewards is not None and len(episode_rewards) > 1 else 2
+        fig, axs = plt.subplots(n_panels, 1, figsize=(12, 4 * n_panels))
 
-        for i in range(self.slices):
-            axs[0].plot(d[:, i], label=labels[i])
-        axs[0].set_title("Demand")
-        axs[0].legend()
+        panel = 0
+        if n_panels == 3:
+            axs[panel].plot(range(1, len(episode_rewards) + 1), episode_rewards, marker='o', markersize=3)
+            axs[panel].set_title("Total Reward per Episode")
+            axs[panel].set_xlabel("Episode")
+            panel += 1
 
-        for i in range(self.slices):
-            axs[1].plot(s[:, i], label=labels[i])
-        axs[1].set_title("Served")
-        axs[1].legend()
-
-        for i in range(self.slices):
-            axs[2].plot(q[:, i], label=labels[i])
-        axs[2].set_title("Queue Length")
-        axs[2].legend()
+        axs[panel].plot(r)
+        axs[panel].set_title("Reward")
+        panel += 1
 
         for i in range(self.slices):
-            axs[3].plot(a[:, i], label=labels[i])
-        axs[3].set_title("PRB Allocation")
-        axs[3].legend()
-
-        t = np.arange(len(r))
-        axs[4].plot(t, r)
-        axs[4].set_title("Reward")
-
-        for i in range(self.slices):
-            axs[5].plot(dm[:, i], label=labels[i])
-        axs[5].set_title("Deadline Miss Rate")
-        axs[5].set_ylabel("Fraction")
-        axs[5].legend()
-
-        for i in range(self.slices):
-            axs[6].plot(aw[:, i], label=labels[i])
-        axs[6].set_title("Average Waiting Time per Slice")
-        axs[6].set_ylabel("Time steps")
-        axs[6].legend()
+            axs[panel].plot(d[:, i], color=colors[i], linestyle="-", label=f"{labels[i]} Arrived")
+            axs[panel].plot(s[:, i], color=colors[i], linestyle="--", label=f"{labels[i]} Served")
+        axs[panel].set_title("Served vs Arrived")
+        axs[panel].legend()
 
         plt.tight_layout()
         plt.show()

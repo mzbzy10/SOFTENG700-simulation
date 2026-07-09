@@ -1,8 +1,6 @@
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Allocators"))
 
-import matplotlib.pyplot as plt
-
 from FixedAllocator import FixedAllocator
 from DQNAllocator import DQNAllocator
 from Simulator import Simulator
@@ -25,7 +23,7 @@ def select_model():
 
 def run_simulator(
     allocator_cls=FixedAllocator,
-    episodes=10,
+    episodes=1,
     steps=500,
     total_prb=50,
     arrival_rate=5
@@ -51,15 +49,7 @@ def run_simulator(
         epsilon_str = f"  ε={allocator.epsilon:.3f}" if hasattr(allocator, 'epsilon') else ""
         print(f"Episode {ep}/{episodes}  total reward: {ep_reward:.2f}{epsilon_str}")
 
-    _, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(range(1, episodes + 1), episode_rewards, marker='o', markersize=3)
-    ax.set_title("Total Reward per Episode")
-    ax.set_xlabel("Episode")
-    ax.set_ylabel("Total Reward")
-    plt.tight_layout()
-    plt.show()
-
-    sim.visualize()
+    sim.visualize(episode_rewards)
 
     if isinstance(allocator, DQNAllocator):
         if input("\nSave model? (y/n): ").strip().lower() == 'y':
