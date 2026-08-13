@@ -1,6 +1,9 @@
 .claude
 claude.md
 
+.png
+.jpg
+
 #models
 *.pt
 

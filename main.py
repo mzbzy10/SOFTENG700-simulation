@@ -30,6 +30,14 @@ def run_simulator(
 ):
     allocator = allocator_cls(total_prb=total_prb)
 
+    if isinstance(allocator, DQNAllocator):
+        if input("\nLoad a pretrained model to continue training? (y/n): ").strip().lower() == 'y':
+            path = input("Model path (default: dqn_model.pt): ").strip() or "dqn_model.pt"
+            try:
+                allocator.load(path)
+            except FileNotFoundError:
+                print(f"No model found at {path}, starting fresh.")
+
     sim = Simulator(
         allocator=allocator,
         steps=steps,
