@@ -8,7 +8,7 @@ class Simulator:
         self,
         allocator,
         steps=100,
-        arrival_rate=5
+        arrival_rate=3  # mMTC avg rate; ~3 x avg size 2 = 6 PRB/step
     ):
         self.allocator = allocator
         self.steps = steps
@@ -29,14 +29,17 @@ class Simulator:
         }
 
         # eMBB ON/OFF burst state — its own independent arrival process
+        # duty cycle p_on = off_prob / (off_prob + (1-on_prob)) ≈ 0.17, so
+        # avg rate ≈ 0.75 tasks/step × 35 avg size ≈ 26 PRB/step
         self.embb_on = True
-        self.embb_on_prob = 0.7   # probability of staying ON
-        self.embb_off_prob = 0.3  # probability of switching to ON from OFF
-        self.embb_on_rate = 8     # arrivals/step while ON
-        self.embb_off_rate = 1    # arrivals/step while OFF
+        self.embb_on_prob = 0.5   # probability of staying ON
+        self.embb_off_prob = 0.1  # probability of switching to ON from OFF
+        self.embb_on_rate = 3     # arrivals/step while ON
+        self.embb_off_rate = 0.3  # arrivals/step while OFF
 
         # URLLC periodic arrivals — deterministic, fixed batch every N steps
-        self.urllc_period = 2      # steps between arrivals
+        # avg rate 0.25 tasks/step × 5 avg size ≈ 1.25 PRB/step
+        self.urllc_period = 4      # steps between arrivals
         self.urllc_batch_size = 1  # tasks per arrival
 
         # highest arrival rate each slice can hit, used to size demand normalization below
@@ -60,6 +63,10 @@ class Simulator:
         self.deadline_miss_hist = []
         self.avg_wait_hist = []
         self.state_hist = []
+        self.starve_hist = []
+
+        # consecutive steps a slice has had demand but received zero allocation
+        self.starve_steps = np.zeros(3)
 
     def reset(self):
         self.time = 0
@@ -73,6 +80,8 @@ class Simulator:
         self.deadline_miss_hist = []
         self.avg_wait_hist = []
         self.state_hist = []
+        self.starve_hist = []
+        self.starve_steps = np.zeros(3)
 
     def generate_embb_arrivals(self):
         # transition state
@@ -134,7 +143,7 @@ class Simulator:
 
         return served
 
-    def compute_reward(self, served, demand, queue, alloc, deadline_miss):
+    def compute_reward(self, served, demand, queue, alloc, deadline_miss, starve_steps):
         # throughput rate: fraction of demand actually served per slice (0–1)
         throughput_rate = np.divide(served, demand, out=np.zeros(3), where=demand > 0)
 
@@ -145,16 +154,29 @@ class Simulator:
         # fraction of total PRBs actually used
         utilisation = alloc.sum() / self.allocator.total_prb
 
+        # starvation: how long (relative to its own deadline) a slice has been
+        # left with demand but under-served — squared so short neglect is cheap
+        # but sustained abandonment is heavily punished. Clipped at 3x deadline
+        # (not 1x): a 1x cap made the penalty flat/constant for most of a long
+        # episode, giving the agent zero incentive to ever recover once starved.
+        max_deadline = np.array([
+            self.slice_config[s]["deadline"] for s in self.slice_names
+        ])
+        norm_starve = np.clip(starve_steps / max_deadline, 0, 3)
+
         # slice-specific weights (all inputs now 0–1 so weights are directly comparable)
         w_throughput = np.array([1.0, 0.5, 0.3])  # eMBB cares most about throughput
-        w_deadline   = np.array([0.5, 3.0, 0.2])  # URLLC deadline miss is heavily penalized
+        w_deadline   = np.array([0.5, 1.5, 0.2])  # URLLC deadline miss penalized, but not so
+                                                    # dominant it makes adapting to other slices pointless
         w_queue      = np.array([0.2, 0.8, 0.1])  # URLLC queue backlog is bad
+        w_starve     = 1.0                        # fairness: same weight for every slice
 
         return (
             (w_throughput * throughput_rate).sum()
             + 0.5 * utilisation
             - (w_deadline * deadline_miss).sum()
             - (w_queue    * norm_queue).sum()
+            - w_starve * (norm_starve ** 2).sum()
         )
 
     def get_state(self, demand, queue, deadline_miss, avg_wait):
@@ -224,7 +246,17 @@ class Simulator:
             queue         = self.get_queue()
             deadline_miss = self.get_deadline_miss_rate()
             avg_wait      = self.get_avg_wait()
-            reward        = self.compute_reward(served, demand, queue, alloc, deadline_miss)
+
+            # update starvation streak: demand present but the slice received
+            # under 10% of what it needed this step. NOTE: this must be based on
+            # service ratio, not "alloc == 0" — the DQN action space enumerates
+            # only splits with a,b,c >= 5, so every slice always gets >= 5 PRBs
+            # and a literal zero-allocation check can never fire.
+            service_ratio = np.divide(served, demand, out=np.ones(3), where=demand > 0)
+            neglected = (demand > 0) & (service_ratio < 0.1)
+            self.starve_steps = np.where(neglected, self.starve_steps + 1, 0)
+
+            reward        = self.compute_reward(served, demand, queue, alloc, deadline_miss, self.starve_steps)
             next_state    = self.get_state(demand, queue, deadline_miss, avg_wait)
 
             # RL training hooks — no-ops for non-RL allocators
@@ -244,6 +276,7 @@ class Simulator:
             self.deadline_miss_hist.append(deadline_miss)
             self.avg_wait_hist.append(avg_wait)
             self.state_hist.append(next_state)
+            self.starve_hist.append(self.starve_steps.copy())
 
             current_state = next_state
 
@@ -257,33 +290,87 @@ class Simulator:
             np.array(self.avg_wait_hist)
         )
 
+    @staticmethod
+    def _smooth(data, window=20, max_points=150):
+        # rolling mean per column + downsampling, so fast-oscillating per-step
+        # signals (the DQN can switch actions every step) read as a trend
+        # instead of a solid block of color
+        n = len(data)
+        w = min(window, n)
+        if w <= 1:
+            return data, np.arange(n)
+
+        kernel = np.ones(w) / w
+        smoothed = np.stack(
+            [np.convolve(data[:, i], kernel, mode='valid') for i in range(data.shape[1])],
+            axis=1
+        )
+        xs = np.arange(w - 1, n)
+
+        stride = max(1, len(xs) // max_points)
+        return smoothed[::stride], xs[::stride]
+
     def visualize(self, episode_rewards=None):
-        d = np.array(self.demands_hist)
-        s = np.array(self.served_hist)
-        r = np.array(self.reward_hist)
+        d  = np.array(self.demands_hist)
+        s  = np.array(self.served_hist)
+        r  = np.array(self.reward_hist)
+        dm = np.array(self.deadline_miss_hist)
+        al = np.array(self.alloc_hist)
+        st = np.array(self.starve_hist)
+
+        # throughput rate (served/demand) — same 0-1 scale for all three slices,
+        # unlike raw served/arrived where eMBB's magnitude drowns out the others
+        throughput_rate = np.divide(s, d, out=np.zeros_like(s, dtype=float), where=d > 0)
 
         labels = ["eMBB", "URLLC", "mMTC"]
         colors = ["tab:blue", "tab:green", "tab:orange"]
+        has_episodes = episode_rewards is not None and len(episode_rewards) > 1
 
-        n_panels = 3 if episode_rewards is not None and len(episode_rewards) > 1 else 2
-        fig, axs = plt.subplots(n_panels, 1, figsize=(12, 4 * n_panels))
+        fig, axs = plt.subplots(3, 2, figsize=(14, 11))
+        axs = axs.flatten()
 
-        panel = 0
-        if n_panels == 3:
-            axs[panel].plot(range(1, len(episode_rewards) + 1), episode_rewards, marker='o', markersize=3)
-            axs[panel].set_title("Total Reward per Episode")
-            axs[panel].set_xlabel("Episode")
-            panel += 1
+        # top-left: training progress (reward objective as a whole)
+        ax = axs[0]
+        if has_episodes:
+            ax.plot(range(1, len(episode_rewards) + 1), episode_rewards,
+                     marker='o', markersize=3, alpha=0.35, label="episode reward")
+            window = min(5, len(episode_rewards))
+            if window > 1:
+                rolling = np.convolve(episode_rewards, np.ones(window) / window, mode='valid')
+                ax.plot(range(window, len(episode_rewards) + 1), rolling,
+                         color='red', label=f"{window}-episode avg")
+            ax.set_title("Total Reward per Episode")
+            ax.set_xlabel("Episode")
+            ax.legend()
+        else:
+            ax.plot(r)
+            ax.set_title("Reward per Step")
+            ax.set_xlabel("Step")
 
-        axs[panel].plot(r)
-        axs[panel].set_title("Reward")
-        panel += 1
+        # remaining panels: reward broken into the four things it actually optimizes for
+        # (throughput and allocation are smoothed — raw per-step values thrash
+        # too fast to read; deadline-miss and starvation are already slow-moving)
+        panels = [
+            (axs[1], throughput_rate, "Throughput Rate (served / demand, 20-step avg)", (-0.05, 1.05), True),
+            (axs[2], dm,              "SLA: Deadline Miss Rate",                        (-0.05, 1.05), False),
+            (axs[3], al,              "Resource: PRB Allocation (20-step avg)",         None,           True),
+            (axs[4], st,              "Fairness: Starvation Streak (steps neglected)",  None,           False),
+        ]
+        for ax, data, title, ylim, smooth in panels:
+            if smooth:
+                plot_data, xs = self._smooth(data)
+            else:
+                plot_data, xs = data, np.arange(len(data))
 
-        for i in range(self.slices):
-            axs[panel].plot(d[:, i], color=colors[i], linestyle="-", label=f"{labels[i]} Arrived")
-            axs[panel].plot(s[:, i], color=colors[i], linestyle="--", label=f"{labels[i]} Served")
-        axs[panel].set_title("Served vs Arrived")
-        axs[panel].legend()
+            for i in range(self.slices):
+                ax.plot(xs, plot_data[:, i], color=colors[i], label=labels[i])
+            ax.set_title(title)
+            ax.set_xlabel("Step")
+            if ylim:
+                ax.set_ylim(*ylim)
+            ax.legend()
+
+        axs[5].axis('off')
 
         plt.tight_layout()
         plt.show()

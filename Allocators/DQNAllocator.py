@@ -53,7 +53,7 @@ class DQNAllocator:
         self.target_net.eval()
 
         self.optimizer = optim.Adam(self.q_net.parameters(), lr=lr)
-        self.loss_fn   = nn.MSELoss()
+        self.loss_fn   = nn.SmoothL1Loss()
 
         self.gamma         = gamma
         self.epsilon       = epsilon

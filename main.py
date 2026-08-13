@@ -23,10 +23,10 @@ def select_model():
 
 def run_simulator(
     allocator_cls=FixedAllocator,
-    episodes=50,
+    episodes=150,
     steps=500,
     total_prb=50,
-    arrival_rate=5
+    arrival_rate=3
 ):
     allocator = allocator_cls(total_prb=total_prb)
 
