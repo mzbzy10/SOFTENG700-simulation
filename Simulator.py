@@ -2,58 +2,40 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from SliceTask import SliceTask
+from Environments import (
+    SLICE_NAMES,
+    ARRIVAL_MODELS,
+    NORM_MAX_DEMAND,
+    NORM_MAX_QUEUE,
+    NORM_MAX_DEADLINE,
+)
+import Reward
 
 class Simulator:
     def __init__(
         self,
         allocator,
-        steps=100,
-        arrival_rate=3  # mMTC avg rate; ~3 x avg size 2 = 6 PRB/step
+        env,
+        steps=100
     ):
         self.allocator = allocator
+        self.env = env
         self.steps = steps
-        self.arrival_rate = arrival_rate
 
         self.time = 0
         self.requests = []
 
-        self.slices = 3
-        self.slice_names = ["eMBB", "URLLC", "mMTC"]
+        self.slice_names = list(SLICE_NAMES)
+        self.slices = len(self.slice_names)
         self.slice_index = {s: i for i, s in enumerate(self.slice_names)}
 
-        # per-slice task size range (inclusive) and deadline
-        self.slice_config = {
-            "eMBB":  {"size_range": (20, 50), "deadline": 80},
-            "URLLC": {"size_range": (2, 8),   "deadline": 10},
-            "mMTC":  {"size_range": (1, 3),   "deadline": 100},
-        }
+        # per-slice task size range (inclusive) and deadline, from the environment
+        self.slice_config = env["slices"]
+        self.arrival_config = env["arrivals"]
 
-        # eMBB ON/OFF burst state — its own independent arrival process
-        # duty cycle p_on = off_prob / (off_prob + (1-on_prob)) ≈ 0.17, so
-        # avg rate ≈ 0.75 tasks/step × 35 avg size ≈ 26 PRB/step
-        self.embb_on = True
-        self.embb_on_prob = 0.5   # probability of staying ON
-        self.embb_off_prob = 0.1  # probability of switching to ON from OFF
-        self.embb_on_rate = 3     # arrivals/step while ON
-        self.embb_off_rate = 0.3  # arrivals/step while OFF
-
-        # URLLC periodic arrivals — deterministic, fixed batch every N steps
-        # avg rate 0.25 tasks/step × 5 avg size ≈ 1.25 PRB/step
-        self.urllc_period = 4      # steps between arrivals
-        self.urllc_batch_size = 1  # tasks per arrival
-
-        # highest arrival rate each slice can hit, used to size demand normalization below
-        self.max_arrival_rate = {
-            "eMBB": self.embb_on_rate,
-            "URLLC": self.urllc_batch_size,
-            "mMTC": arrival_rate,
-        }
-
-        # max expected per-slice demand = largest task size x highest arrival rate
-        self.max_demand = np.array([
-            self.slice_config[s]["size_range"][1] * self.max_arrival_rate[s]
-            for s in self.slice_names
-        ])
+        # ON/OFF arrival processes carry state between steps; every slice gets an
+        # entry so any slice can use the "onoff" model
+        self.onoff_state = {s: True for s in self.slice_names}
 
         self.demands_hist = []
         self.served_hist = []
@@ -71,7 +53,7 @@ class Simulator:
     def reset(self):
         self.time = 0
         self.requests = []
-        self.embb_on = True
+        self.onoff_state = {s: True for s in self.slice_names}
         self.demands_hist = []
         self.served_hist = []
         self.queue_hist = []
@@ -83,22 +65,31 @@ class Simulator:
         self.starve_hist = []
         self.starve_steps = np.zeros(3)
 
-    def generate_embb_arrivals(self):
-        # transition state
-        if self.embb_on:
-            self.embb_on = np.random.rand() < self.embb_on_prob
-        else:
-            self.embb_on = np.random.rand() < self.embb_off_prob
+    def generate_arrivals(self, slice_name):
+        # Number of tasks arriving for one slice this step. The process is fixed
+        # per slice (Environments.ARRIVAL_MODELS); environments only tune its
+        # parameters.
+        cfg = self.arrival_config[slice_name]
+        model = ARRIVAL_MODELS[slice_name]
 
-        rate = self.embb_on_rate if self.embb_on else self.embb_off_rate
-        return np.random.poisson(rate)
+        if model == "poisson":
+            return np.random.poisson(cfg["rate"])
 
-    def generate_urllc_arrivals(self):
-        # deterministic periodic traffic: a fixed batch every N steps, none in between
-        return self.urllc_batch_size if self.time % self.urllc_period == 0 else 0
+        if model == "onoff":
+            # two-state Markov-modulated Poisson process, for bursty traffic
+            if self.onoff_state[slice_name]:
+                on = np.random.rand() < cfg["on_prob"]
+            else:
+                on = np.random.rand() < cfg["off_prob"]
+            self.onoff_state[slice_name] = on
 
-    def generate_mmtc_arrivals(self):
-        return np.random.poisson(self.arrival_rate)
+            return np.random.poisson(cfg["on_rate"] if on else cfg["off_rate"])
+
+        if model == "periodic":
+            # deterministic: a fixed batch every N steps, none in between
+            return cfg["batch_size"] if self.time % cfg["period"] == 0 else 0
+
+        raise ValueError(f"unknown arrival model for {slice_name}: {model}")
 
     def make_task(self, slice_name):
         config = self.slice_config[slice_name]
@@ -108,14 +99,8 @@ class Simulator:
         return SliceTask(slice_name, size, self.time, config["deadline"])
 
     def generate(self):
-        arrivals = {
-            "eMBB": self.generate_embb_arrivals(),
-            "URLLC": self.generate_urllc_arrivals(),
-            "mMTC": self.generate_mmtc_arrivals(),
-        }
-
-        for slice_name, n in arrivals.items():
-            for _ in range(n):
+        for slice_name in self.slice_names:
+            for _ in range(self.generate_arrivals(slice_name)):
                 self.requests.append(self.make_task(slice_name))
 
     def aggregate_demand(self):
@@ -144,61 +129,29 @@ class Simulator:
         return served
 
     def compute_reward(self, served, demand, queue, alloc, deadline_miss, starve_steps):
-        # throughput rate: fraction of demand actually served per slice (0–1)
-        throughput_rate = np.divide(served, demand, out=np.zeros(3), where=demand > 0)
-
-        # queue normalized against max expected backlog
-        max_queue = self.arrival_rate * 20
-        norm_queue = np.clip(queue / max_queue, 0, 1)
-
-        # fraction of total PRBs actually used
-        utilisation = alloc.sum() / self.allocator.total_prb
-
-        # starvation: how long (relative to its own deadline) a slice has been
-        # left with demand but under-served — squared so short neglect is cheap
-        # but sustained abandonment is heavily punished. Clipped at 3x deadline
-        # (not 1x): a 1x cap made the penalty flat/constant for most of a long
-        # episode, giving the agent zero incentive to ever recover once starved.
-        max_deadline = np.array([
-            self.slice_config[s]["deadline"] for s in self.slice_names
-        ])
-        norm_starve = np.clip(starve_steps / max_deadline, 0, 3)
-
-        # slice-specific weights (all inputs now 0–1 so weights are directly comparable)
-        w_throughput = np.array([1.0, 0.5, 0.3])  # eMBB cares most about throughput
-        w_deadline   = np.array([0.5, 1.5, 0.2])  # URLLC deadline miss penalized, but not so
-                                                    # dominant it makes adapting to other slices pointless
-        w_queue      = np.array([0.2, 0.8, 0.1])  # URLLC queue backlog is bad
-        w_starve     = 1.0                        # fairness: same weight for every slice
-
-        return (
-            (w_throughput * throughput_rate).sum()
-            + 0.5 * utilisation
-            - (w_deadline * deadline_miss).sum()
-            - (w_queue    * norm_queue).sum()
-            - w_starve * (norm_starve ** 2).sum()
+        # the reward algorithm and all its weights live in Reward.py
+        return Reward.compute_reward(
+            served, demand, queue, alloc, deadline_miss, starve_steps,
+            total_prb=self.allocator.total_prb,
         )
 
     def get_state(self, demand, queue, deadline_miss, avg_wait):
         # Returns a 12-element normalized observation vector (all values in [0, 1]):
         #
         #   Indices  Signal                  Cap used
-        #   -------  ----------------------  ---------------------------------
-        #   0–2      demand per slice        max task size × max arrival rate (per slice)
-        #   3–5      queue length per slice  arrival_rate × 20
+        #   -------  ----------------------  ------------------
+        #   0–2      demand per slice        NORM_MAX_DEMAND
+        #   3–5      queue length per slice  NORM_MAX_QUEUE
         #   6–8      deadline miss rate      already 0–1
-        #   9–11     avg wait per slice      per-slice deadlines
+        #   9–11     avg wait per slice      NORM_MAX_DEADLINE
         #
-        # Normalization caps derived from slice deadlines and traffic parameters
-        max_queue    = self.arrival_rate * 20                       # generous backlog headroom
-        max_deadline = np.array([
-            self.slice_config[s]["deadline"] for s in self.slice_names
-        ])
-
-        norm_demand = np.clip(demand / self.max_demand, 0.0, 1.0)
-        norm_queue  = np.clip(queue  / max_queue,  0.0, 1.0)
-        norm_miss   = deadline_miss                                 # already 0–1
-        norm_wait   = np.clip(avg_wait / max_deadline,  0.0, 1.0)
+        # The caps are global constants, not per-environment — see the warning in
+        # Environments.py. Scaling the observation differently in each environment
+        # would corrupt any cross-environment transfer measurement.
+        norm_demand = np.clip(demand   / NORM_MAX_DEMAND,   0.0, 1.0)
+        norm_queue  = np.clip(queue    / NORM_MAX_QUEUE,    0.0, 1.0)
+        norm_miss   = deadline_miss                          # already 0–1
+        norm_wait   = np.clip(avg_wait / NORM_MAX_DEADLINE, 0.0, 1.0)
 
         return np.concatenate([norm_demand, norm_queue, norm_miss, norm_wait])
 
@@ -231,7 +184,8 @@ class Simulator:
         return np.divide(totals, counts, out=np.zeros(3), where=counts > 0)
 
     def run(self, target_update_freq=10):
-        current_state = np.zeros(12)  # initial observation before first step
+        # initial observation before the first step: 4 signals x 3 slices
+        current_state = np.zeros(4 * self.slices)
 
         for t in range(self.steps):
             self.time = t
@@ -247,13 +201,10 @@ class Simulator:
             deadline_miss = self.get_deadline_miss_rate()
             avg_wait      = self.get_avg_wait()
 
-            # update starvation streak: demand present but the slice received
-            # under 10% of what it needed this step. NOTE: this must be based on
-            # service ratio, not "alloc == 0" — the DQN action space enumerates
-            # only splits with a,b,c >= 5, so every slice always gets >= 5 PRBs
-            # and a literal zero-allocation check can never fire.
+            # update starvation streak: demand present but the slice was served
+            # less than Reward.STARVE_SERVICE_THRESHOLD of what it needed
             service_ratio = np.divide(served, demand, out=np.ones(3), where=demand > 0)
-            neglected = (demand > 0) & (service_ratio < 0.1)
+            neglected = (demand > 0) & (service_ratio < Reward.STARVE_SERVICE_THRESHOLD)
             self.starve_steps = np.where(neglected, self.starve_steps + 1, 0)
 
             reward        = self.compute_reward(served, demand, queue, alloc, deadline_miss, self.starve_steps)
@@ -322,7 +273,7 @@ class Simulator:
         # unlike raw served/arrived where eMBB's magnitude drowns out the others
         throughput_rate = np.divide(s, d, out=np.zeros_like(s, dtype=float), where=d > 0)
 
-        labels = ["eMBB", "URLLC", "mMTC"]
+        labels = self.slice_names
         colors = ["tab:blue", "tab:green", "tab:orange"]
         has_episodes = episode_rewards is not None and len(episode_rewards) > 1
 
