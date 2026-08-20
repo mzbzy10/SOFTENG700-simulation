@@ -1,13 +1,15 @@
-import numpy as np
-import matplotlib.pyplot as plt
-
 class SliceTask:
-    def __init__(self, slice_type, size, arrival_time, deadline):
+    """One arriving task for one slice.
+
+    Tasks no longer carry a deadline: SLA is defined per slice *type* rather
+    than per task (see Environments.SLA), and only URLLC's KPI is delay-based.
+    """
+
+    def __init__(self, slice_type, size, arrival_time):
         self.slice_type = slice_type
         self.size = size
         self.remaining = size
         self.arrival_time = arrival_time
-        self.deadline = deadline
 
     def serve(self, amount):
         used = min(amount, self.remaining)
@@ -19,9 +21,3 @@ class SliceTask:
 
     def waiting_time(self, current_time):
         return current_time - self.arrival_time
-
-    def is_deadline_missed(self, current_time):
-        return self.waiting_time(current_time) > self.deadline
-
-    def deadline_missed_by(self, current_time):
-        return self.waiting_time(current_time) - self.deadline

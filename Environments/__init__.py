@@ -27,8 +27,57 @@ ARRIVAL_PARAMS = {
     "poisson":  {"rate"},
 }
 
-# Per-slice SLA parameters, present in every env file alongside the arrival ones.
-SLA_PARAMS = {"size_range", "deadline"}
+# Per-slice traffic parameters, present in every env file alongside the arrival
+# ones. Note that `deadline` is NOT here: SLA thresholds are global (see SLA
+# below), because they define what SSR *means* and must not vary per scenario.
+SLA_PARAMS = {"size_range"}
+
+
+# --------------------------------------------------------------------------
+# SLA definitions — one KPI per slice type, global across all environments.
+#
+# The survey (Section IV-C) criticises formulations that "only consider one type
+# of service with different threshold levels as different slices. Nevertheless,
+# slices come with different KPI requirements and different impacting factors,
+# so a single slice type cannot accommodate the heterogeneous set of services in
+# 5G." Using one deadline metric with three thresholds is exactly that pattern,
+# so each slice instead gets the KPI its service class is actually defined by,
+# following Table I [6] ("SLA satisfaction in terms of average buffer length,
+# data rate, and PRB usage"), [10] (throughput for eMBB, queuing delay for
+# uRLLC) and Table III [12] ("minimum data rate and maximum delay").
+#
+#   eMBB   minimum data rate   — sustained PRBs/step served over a window
+#   URLLC  maximum delay       — task waiting time, in steps
+#   mMTC   maximum buffer      — queued task backlog
+#
+# These are contract terms, not traffic parameters: they MUST be identical in
+# every environment. If env A promised a 5-step URLLC delay and env B promised
+# 20, "SSR" would denote different things in each and a cross-environment
+# transfer gap would be uninterpretable.
+#
+# Timebase: 1 step = 1 TTI = 1 ms, so max_delay 5 = 5 ms (3GPP URLLC user-plane
+# latency targets are 1-10 ms).
+#
+# Thresholds are calibrated, not guessed: each was swept against both a
+# demand-proportional (near-optimal) and the naive fixed policy across all four
+# environments, and set where the good policy scores ~0.75-0.99 — off the 1.0
+# ceiling so there is headroom to measure, but far from floored. Resulting
+# per-slice SSR, greedy / fixed:
+#
+#             eMBB        URLLC        mMTC
+#   balanced  0.97/0.95   0.69/0.13   0.80/0.04
+#   embb      0.99/0.99   0.60/1.00   0.74/0.10
+#   urllc     0.91/0.91   0.81/0.03   0.97/0.11
+#   mmtc      0.85/0.87   0.99/1.00   0.95/0.02
+#
+# min_rate sits below every environment's eMBB offered load (12-24 PRB/step) so
+# it acts as a floor rather than collapsing into "serve all demand".
+# --------------------------------------------------------------------------
+SLA = {
+    "eMBB":  {"kpi": "min_rate",   "min_rate": 10.0, "window": 20},
+    "URLLC": {"kpi": "max_delay",  "max_delay": 5},
+    "mMTC":  {"kpi": "max_buffer", "max_buffer": 60},
+}
 
 
 # --------------------------------------------------------------------------
@@ -42,16 +91,17 @@ SLA_PARAMS = {"size_range", "deadline"}
 # scaling artifact rather than a real policy mismatch, which would invalidate
 # the cross-environment comparison. Keep these fixed across all environments.
 #
-# Values below reproduce what the balanced config computed previously:
-#   demand cap = largest task size x highest arrival rate, per slice
-#   queue cap  = 3 (mMTC rate) x 20
-# NOTE: the demand caps clip fairly aggressively, since queued backlog can far
-# exceed one step's worth of arrivals. Worth revisiting once the environments
-# are finalized.
+# These are measured, not guessed: the p99 of each signal pooled over all four
+# environments at the 48 PRB/step operating load, driven by a demand-proportional
+# (near-optimal) policy. Sizing them to a good policy's operating range keeps the
+# observation well resolved where the agent actually lives; a policy doing much
+# worse clips at 1.0, which is itself the correct signal ("badly backlogged").
+#
+# Re-measure these if the offered load or the arrival mix changes materially.
 # --------------------------------------------------------------------------
-NORM_MAX_DEMAND   = np.array([150.0, 8.0, 9.0])
-NORM_MAX_QUEUE    = np.array([60.0, 60.0, 60.0])
-NORM_MAX_DEADLINE = np.array([80.0, 10.0, 100.0])
+NORM_MAX_DEMAND = np.array([1200.0, 550.0, 450.0])
+NORM_MAX_QUEUE  = np.array([  35.0, 105.0, 220.0])
+NORM_MAX_WAIT   = np.array([  80.0,  20.0, 100.0])
 
 
 # attribute name each slice uses inside an environment module

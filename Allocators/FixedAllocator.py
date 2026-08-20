@@ -1,7 +1,7 @@
 import numpy as np
 
 class FixedAllocator:
-    def __init__(self, total_prb=60):
+    def __init__(self, total_prb=50):
         self.total_prb = total_prb
         self.ratio = np.array([0.5, 0.3, 0.2])
 

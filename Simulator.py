@@ -1,3 +1,5 @@
+from collections import deque
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -5,9 +7,10 @@ from SliceTask import SliceTask
 from Environments import (
     SLICE_NAMES,
     ARRIVAL_MODELS,
+    SLA,
     NORM_MAX_DEMAND,
     NORM_MAX_QUEUE,
-    NORM_MAX_DEADLINE,
+    NORM_MAX_WAIT,
 )
 import Reward
 
@@ -29,7 +32,7 @@ class Simulator:
         self.slices = len(self.slice_names)
         self.slice_index = {s: i for i, s in enumerate(self.slice_names)}
 
-        # per-slice task size range (inclusive) and deadline, from the environment
+        # per-slice task size range (inclusive), from the environment
         self.slice_config = env["slices"]
         self.arrival_config = env["arrivals"]
 
@@ -37,12 +40,18 @@ class Simulator:
         # entry so any slice can use the "onoff" model
         self.onoff_state = {s: True for s in self.slice_names}
 
+        # eMBB's KPI is a sustained data rate, so served/demand are averaged over
+        # a trailing window rather than judged per step
+        self.rate_window = SLA["eMBB"]["window"]
+        self.served_window = deque(maxlen=self.rate_window)
+        self.demand_window = deque(maxlen=self.rate_window)
+
         self.demands_hist = []
         self.served_hist = []
         self.queue_hist = []
         self.alloc_hist = []
         self.reward_hist = []
-        self.deadline_miss_hist = []
+        self.ssr_hist = []
         self.avg_wait_hist = []
         self.state_hist = []
         self.starve_hist = []
@@ -54,12 +63,14 @@ class Simulator:
         self.time = 0
         self.requests = []
         self.onoff_state = {s: True for s in self.slice_names}
+        self.served_window = deque(maxlen=self.rate_window)
+        self.demand_window = deque(maxlen=self.rate_window)
         self.demands_hist = []
         self.served_hist = []
         self.queue_hist = []
         self.alloc_hist = []
         self.reward_hist = []
-        self.deadline_miss_hist = []
+        self.ssr_hist = []
         self.avg_wait_hist = []
         self.state_hist = []
         self.starve_hist = []
@@ -92,11 +103,10 @@ class Simulator:
         raise ValueError(f"unknown arrival model for {slice_name}: {model}")
 
     def make_task(self, slice_name):
-        config = self.slice_config[slice_name]
-        low, high = config["size_range"]
+        low, high = self.slice_config[slice_name]["size_range"]
         size = np.random.randint(low, high + 1)  # +1 since np.random.randint's high is exclusive
 
-        return SliceTask(slice_name, size, self.time, config["deadline"])
+        return SliceTask(slice_name, size, self.time)
 
     def generate(self):
         for slice_name in self.slice_names:
@@ -128,32 +138,32 @@ class Simulator:
 
         return served
 
-    def compute_reward(self, served, demand, queue, alloc, deadline_miss, starve_steps):
+    def compute_reward(self, served, demand, queue, alloc, ssr, starve_steps):
         # the reward algorithm and all its weights live in Reward.py
         return Reward.compute_reward(
-            served, demand, queue, alloc, deadline_miss, starve_steps,
+            served, demand, queue, alloc, ssr, starve_steps,
             total_prb=self.allocator.total_prb,
         )
 
-    def get_state(self, demand, queue, deadline_miss, avg_wait):
+    def get_state(self, demand, queue, ssr, avg_wait):
         # Returns a 12-element normalized observation vector (all values in [0, 1]):
         #
         #   Indices  Signal                  Cap used
         #   -------  ----------------------  ------------------
         #   0–2      demand per slice        NORM_MAX_DEMAND
         #   3–5      queue length per slice  NORM_MAX_QUEUE
-        #   6–8      deadline miss rate      already 0–1
-        #   9–11     avg wait per slice      NORM_MAX_DEADLINE
+        #   6–8      SLA satisfaction ratio  already 0–1
+        #   9–11     avg wait per slice      NORM_MAX_WAIT
         #
         # The caps are global constants, not per-environment — see the warning in
-        # Environments.py. Scaling the observation differently in each environment
-        # would corrupt any cross-environment transfer measurement.
-        norm_demand = np.clip(demand   / NORM_MAX_DEMAND,   0.0, 1.0)
-        norm_queue  = np.clip(queue    / NORM_MAX_QUEUE,    0.0, 1.0)
-        norm_miss   = deadline_miss                          # already 0–1
-        norm_wait   = np.clip(avg_wait / NORM_MAX_DEADLINE, 0.0, 1.0)
+        # Environments/__init__.py. Scaling the observation differently in each
+        # environment would corrupt any cross-environment transfer measurement.
+        norm_demand = np.clip(demand   / NORM_MAX_DEMAND, 0.0, 1.0)
+        norm_queue  = np.clip(queue    / NORM_MAX_QUEUE,  0.0, 1.0)
+        norm_ssr    = ssr                                   # already 0–1
+        norm_wait   = np.clip(avg_wait / NORM_MAX_WAIT,   0.0, 1.0)
 
-        return np.concatenate([norm_demand, norm_queue, norm_miss, norm_wait])
+        return np.concatenate([norm_demand, norm_queue, norm_ssr, norm_wait])
 
     def get_queue(self):
         q = np.zeros(3)
@@ -162,16 +172,41 @@ class Simulator:
                 q[self.slice_index[task.slice_type]] += 1
         return q
 
-    def get_deadline_miss_rate(self):
-        misses = np.zeros(3)
-        counts = np.zeros(3)
-        for task in self.requests:
-            if not task.is_complete():
-                i = self.slice_index[task.slice_type]
-                counts[i] += 1
-                if task.is_deadline_missed(self.time):
-                    misses[i] += 1
-        return np.divide(misses, counts, out=np.zeros(3), where=counts > 0)
+    def get_ssr(self, served, demand, queue):
+        """Per-slice SLA satisfaction ratio for this step, each on its own KPI.
+
+        One KPI per slice type rather than one metric with three thresholds —
+        see the SLA block in Environments/__init__.py for the rationale and
+        citations. Every component is in [0, 1] and 1.0 means fully satisfied,
+        so the three remain directly comparable and summable in the reward.
+        """
+        ssr = np.ones(3)
+
+        # eMBB — minimum data rate, judged over a trailing window because a data
+        # rate is inherently a rate over time. Compared against what was
+        # *achievable*: during a lull the slice cannot be served at min_rate, and
+        # is not held to it.
+        i = self.slice_index["eMBB"]
+        served_w = sum(s[i] for s in self.served_window)
+        demand_w = sum(d[i] for d in self.demand_window)
+        target = min(SLA["eMBB"]["min_rate"] * len(self.served_window), demand_w)
+        ssr[i] = 1.0 if target <= 0 else np.clip(served_w / target, 0.0, 1.0)
+
+        # URLLC — maximum delay: fraction of in-system tasks still within budget
+        i = self.slice_index["URLLC"]
+        budget = SLA["URLLC"]["max_delay"]
+        held = [t for t in self.requests if t.slice_type == "URLLC"]
+        if held:
+            ontime = sum(1 for t in held if t.waiting_time(self.time) <= budget)
+            ssr[i] = ontime / len(held)
+
+        # mMTC — maximum buffer: satisfied while backlog is within the cap, then
+        # decaying as the ratio by which it is exceeded (2x over -> 0.5)
+        i = self.slice_index["mMTC"]
+        cap = SLA["mMTC"]["max_buffer"]
+        ssr[i] = 1.0 if queue[i] <= cap else np.clip(cap / queue[i], 0.0, 1.0)
+
+        return ssr
 
     def get_avg_wait(self):
         totals = np.zeros(3)
@@ -197,9 +232,14 @@ class Simulator:
             alloc = self.allocator.get_allocation(self.requests, current_state)
             served = self.serve(alloc.copy())
 
-            queue         = self.get_queue()
-            deadline_miss = self.get_deadline_miss_rate()
-            avg_wait      = self.get_avg_wait()
+            queue    = self.get_queue()
+            avg_wait = self.get_avg_wait()
+
+            # eMBB's rate KPI needs a trailing window; push this step before
+            # evaluating SSR so the current step counts toward it
+            self.served_window.append(served)
+            self.demand_window.append(demand)
+            ssr = self.get_ssr(served, demand, queue)
 
             # update starvation streak: demand present but the slice was served
             # less than Reward.STARVE_SERVICE_THRESHOLD of what it needed
@@ -207,8 +247,8 @@ class Simulator:
             neglected = (demand > 0) & (service_ratio < Reward.STARVE_SERVICE_THRESHOLD)
             self.starve_steps = np.where(neglected, self.starve_steps + 1, 0)
 
-            reward        = self.compute_reward(served, demand, queue, alloc, deadline_miss, self.starve_steps)
-            next_state    = self.get_state(demand, queue, deadline_miss, avg_wait)
+            reward     = self.compute_reward(served, demand, queue, alloc, ssr, self.starve_steps)
+            next_state = self.get_state(demand, queue, ssr, avg_wait)
 
             # RL training hooks — no-ops for non-RL allocators
             done = (t == self.steps - 1)
@@ -224,7 +264,7 @@ class Simulator:
             self.queue_hist.append(queue)
             self.alloc_hist.append(alloc)
             self.reward_hist.append(reward)
-            self.deadline_miss_hist.append(deadline_miss)
+            self.ssr_hist.append(ssr)
             self.avg_wait_hist.append(avg_wait)
             self.state_hist.append(next_state)
             self.starve_hist.append(self.starve_steps.copy())
@@ -237,7 +277,7 @@ class Simulator:
             np.array(self.queue_hist),
             np.array(self.alloc_hist),
             np.array(self.reward_hist),
-            np.array(self.deadline_miss_hist),
+            np.array(self.ssr_hist),
             np.array(self.avg_wait_hist)
         )
 
@@ -265,7 +305,7 @@ class Simulator:
         d  = np.array(self.demands_hist)
         s  = np.array(self.served_hist)
         r  = np.array(self.reward_hist)
-        dm = np.array(self.deadline_miss_hist)
+        sr = np.array(self.ssr_hist)
         al = np.array(self.alloc_hist)
         st = np.array(self.starve_hist)
 
@@ -303,7 +343,7 @@ class Simulator:
         # too fast to read; deadline-miss and starvation are already slow-moving)
         panels = [
             (axs[1], throughput_rate, "Throughput Rate (served / demand, 20-step avg)", (-0.05, 1.05), True),
-            (axs[2], dm,              "SLA: Deadline Miss Rate",                        (-0.05, 1.05), False),
+            (axs[2], sr,              "SLA Satisfaction Ratio (per-slice KPI)",         (-0.05, 1.05), True),
             (axs[3], al,              "Resource: PRB Allocation (20-step avg)",         None,           True),
             (axs[4], st,              "Fairness: Starvation Streak (steps neglected)",  None,           False),
         ]
