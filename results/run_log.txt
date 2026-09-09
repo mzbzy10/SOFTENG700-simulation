@@ -1,0 +1,296 @@
+epsilon decay 0.999967 per gradient step (floor reached at ~60% of 150000 steps)
+
+Training balanced seed 0 (300 x 500 steps)
+    ep   25/300  reward(last25)= 1348.06  eps=0.661
+    ep   50/300  reward(last25)= 1357.25  eps=0.436
+    ep   75/300  reward(last25)= 1430.62  eps=0.288
+    ep  100/300  reward(last25)= 1413.63  eps=0.190
+    ep  125/300  reward(last25)= 1424.59  eps=0.125
+    ep  150/300  reward(last25)= 1417.29  eps=0.083
+    ep  175/300  reward(last25)= 1416.00  eps=0.054
+    ep  200/300  reward(last25)= 1419.15  eps=0.050
+    ep  225/300  reward(last25)= 1420.49  eps=0.050
+    ep  250/300  reward(last25)= 1435.10  eps=0.050
+    ep  275/300  reward(last25)= 1428.73  eps=0.050
+    ep  300/300  reward(last25)= 1436.73  eps=0.050
+Model saved to C:\Users\mzbzy10\Desktop\700\SOFTENG700-simulation\models\policy_balanced_s0.pt
+
+Training balanced seed 1 (300 x 500 steps)
+    ep   25/300  reward(last25)= 1308.25  eps=0.661
+    ep   50/300  reward(last25)= 1414.54  eps=0.436
+    ep   75/300  reward(last25)= 1419.13  eps=0.288
+    ep  100/300  reward(last25)= 1419.97  eps=0.190
+    ep  125/300  reward(last25)= 1441.16  eps=0.125
+    ep  150/300  reward(last25)= 1442.99  eps=0.083
+    ep  175/300  reward(last25)= 1435.57  eps=0.054
+    ep  200/300  reward(last25)= 1439.04  eps=0.050
+    ep  225/300  reward(last25)= 1448.00  eps=0.050
+    ep  250/300  reward(last25)= 1438.84  eps=0.050
+    ep  275/300  reward(last25)= 1435.73  eps=0.050
+    ep  300/300  reward(last25)= 1442.84  eps=0.050
+Model saved to C:\Users\mzbzy10\Desktop\700\SOFTENG700-simulation\models\policy_balanced_s1.pt
+
+Training balanced seed 2 (300 x 500 steps)
+    ep   25/300  reward(last25)= 1271.39  eps=0.661
+    ep   50/300  reward(last25)= 1400.48  eps=0.436
+    ep   75/300  reward(last25)= 1437.63  eps=0.288
+    ep  100/300  reward(last25)= 1441.94  eps=0.190
+    ep  125/300  reward(last25)= 1442.96  eps=0.125
+    ep  150/300  reward(last25)= 1442.81  eps=0.083
+    ep  175/300  reward(last25)= 1443.03  eps=0.054
+    ep  200/300  reward(last25)= 1446.84  eps=0.050
+    ep  225/300  reward(last25)= 1445.22  eps=0.050
+    ep  250/300  reward(last25)= 1441.68  eps=0.050
+    ep  275/300  reward(last25)= 1443.79  eps=0.050
+    ep  300/300  reward(last25)= 1447.77  eps=0.050
+Model saved to C:\Users\mzbzy10\Desktop\700\SOFTENG700-simulation\models\policy_balanced_s2.pt
+
+Training embb_intensive seed 0 (300 x 500 steps)
+    ep   25/300  reward(last25)= 1453.73  eps=0.661
+    ep   50/300  reward(last25)= 1421.39  eps=0.436
+    ep   75/300  reward(last25)= 1451.69  eps=0.288
+    ep  100/300  reward(last25)= 1446.21  eps=0.190
+    ep  125/300  reward(last25)= 1448.18  eps=0.125
+    ep  150/300  reward(last25)= 1447.29  eps=0.083
+    ep  175/300  reward(last25)= 1449.12  eps=0.054
+    ep  200/300  reward(last25)= 1449.42  eps=0.050
+    ep  225/300  reward(last25)= 1448.57  eps=0.050
+    ep  250/300  reward(last25)= 1450.41  eps=0.050
+    ep  275/300  reward(last25)= 1446.46  eps=0.050
+    ep  300/300  reward(last25)= 1449.54  eps=0.050
+Model saved to C:\Users\mzbzy10\Desktop\700\SOFTENG700-simulation\models\policy_embb_intensive_s0.pt
+
+Training embb_intensive seed 1 (300 x 500 steps)
+    ep   25/300  reward(last25)= 1451.29  eps=0.661
+    ep   50/300  reward(last25)= 1450.19  eps=0.436
+    ep   75/300  reward(last25)= 1423.05  eps=0.288
+    ep  100/300  reward(last25)= 1441.40  eps=0.190
+    ep  125/300  reward(last25)= 1445.19  eps=0.125
+    ep  150/300  reward(last25)= 1449.44  eps=0.083
+    ep  175/300  reward(last25)= 1445.21  eps=0.054
+    ep  200/300  reward(last25)= 1447.67  eps=0.050
+    ep  225/300  reward(last25)= 1447.45  eps=0.050
+    ep  250/300  reward(last25)= 1447.33  eps=0.050
+    ep  275/300  reward(last25)= 1450.67  eps=0.050
+    ep  300/300  reward(last25)= 1448.11  eps=0.050
+Model saved to C:\Users\mzbzy10\Desktop\700\SOFTENG700-simulation\models\policy_embb_intensive_s1.pt
+
+Training embb_intensive seed 2 (300 x 500 steps)
+    ep   25/300  reward(last25)= 1453.40  eps=0.661
+    ep   50/300  reward(last25)= 1449.20  eps=0.436
+    ep   75/300  reward(last25)= 1445.86  eps=0.288
+    ep  100/300  reward(last25)= 1444.47  eps=0.190
+    ep  125/300  reward(last25)= 1442.09  eps=0.125
+    ep  150/300  reward(last25)= 1441.19  eps=0.083
+    ep  175/300  reward(last25)= 1444.46  eps=0.054
+    ep  200/300  reward(last25)= 1444.73  eps=0.050
+    ep  225/300  reward(last25)= 1446.50  eps=0.050
+    ep  250/300  reward(last25)= 1444.18  eps=0.050
+    ep  275/300  reward(last25)= 1446.59  eps=0.050
+    ep  300/300  reward(last25)= 1444.13  eps=0.050
+Model saved to C:\Users\mzbzy10\Desktop\700\SOFTENG700-simulation\models\policy_embb_intensive_s2.pt
+
+Training urllc_intensive seed 0 (300 x 500 steps)
+    ep   25/300  reward(last25)=  971.67  eps=0.661
+    ep   50/300  reward(last25)= 1037.39  eps=0.436
+    ep   75/300  reward(last25)= 1063.17  eps=0.288
+    ep  100/300  reward(last25)= 1058.76  eps=0.190
+    ep  125/300  reward(last25)= 1225.43  eps=0.125
+    ep  150/300  reward(last25)= 1353.45  eps=0.083
+    ep  175/300  reward(last25)= 1393.66  eps=0.054
+    ep  200/300  reward(last25)= 1403.23  eps=0.050
+    ep  225/300  reward(last25)= 1403.71  eps=0.050
+    ep  250/300  reward(last25)= 1394.72  eps=0.050
+    ep  275/300  reward(last25)= 1420.90  eps=0.050
+    ep  300/300  reward(last25)= 1413.20  eps=0.050
+Model saved to C:\Users\mzbzy10\Desktop\700\SOFTENG700-simulation\models\policy_urllc_intensive_s0.pt
+
+Training urllc_intensive seed 1 (300 x 500 steps)
+    ep   25/300  reward(last25)=  975.83  eps=0.661
+    ep   50/300  reward(last25)= 1003.18  eps=0.436
+    ep   75/300  reward(last25)= 1272.94  eps=0.288
+    ep  100/300  reward(last25)= 1208.60  eps=0.190
+    ep  125/300  reward(last25)= 1275.92  eps=0.125
+    ep  150/300  reward(last25)= 1364.49  eps=0.083
+    ep  175/300  reward(last25)= 1380.98  eps=0.054
+    ep  200/300  reward(last25)= 1389.03  eps=0.050
+    ep  225/300  reward(last25)= 1388.24  eps=0.050
+    ep  250/300  reward(last25)= 1383.61  eps=0.050
+    ep  275/300  reward(last25)= 1383.81  eps=0.050
+    ep  300/300  reward(last25)= 1397.24  eps=0.050
+Model saved to C:\Users\mzbzy10\Desktop\700\SOFTENG700-simulation\models\policy_urllc_intensive_s1.pt
+
+Training urllc_intensive seed 2 (300 x 500 steps)
+    ep   25/300  reward(last25)=  966.60  eps=0.661
+    ep   50/300  reward(last25)= 1081.50  eps=0.436
+    ep   75/300  reward(last25)= 1178.56  eps=0.288
+    ep  100/300  reward(last25)= 1079.35  eps=0.190
+    ep  125/300  reward(last25)= 1307.12  eps=0.125
+    ep  150/300  reward(last25)= 1394.64  eps=0.083
+    ep  175/300  reward(last25)= 1411.93  eps=0.054
+    ep  200/300  reward(last25)= 1414.69  eps=0.050
+    ep  225/300  reward(last25)= 1413.76  eps=0.050
+    ep  250/300  reward(last25)= 1410.00  eps=0.050
+    ep  275/300  reward(last25)= 1423.19  eps=0.050
+    ep  300/300  reward(last25)= 1418.00  eps=0.050
+Model saved to C:\Users\mzbzy10\Desktop\700\SOFTENG700-simulation\models\policy_urllc_intensive_s2.pt
+
+Training mmtc_intensive seed 0 (300 x 500 steps)
+    ep   25/300  reward(last25)=  966.93  eps=0.661
+    ep   50/300  reward(last25)=  989.41  eps=0.436
+    ep   75/300  reward(last25)= 1068.40  eps=0.288
+    ep  100/300  reward(last25)= 1351.92  eps=0.190
+    ep  125/300  reward(last25)= 1393.15  eps=0.125
+    ep  150/300  reward(last25)= 1345.07  eps=0.083
+    ep  175/300  reward(last25)= 1405.52  eps=0.054
+    ep  200/300  reward(last25)= 1404.70  eps=0.050
+    ep  225/300  reward(last25)= 1414.72  eps=0.050
+    ep  250/300  reward(last25)= 1419.57  eps=0.050
+    ep  275/300  reward(last25)= 1408.55  eps=0.050
+    ep  300/300  reward(last25)= 1403.50  eps=0.050
+Model saved to C:\Users\mzbzy10\Desktop\700\SOFTENG700-simulation\models\policy_mmtc_intensive_s0.pt
+
+Training mmtc_intensive seed 1 (300 x 500 steps)
+    ep   25/300  reward(last25)=  973.60  eps=0.661
+    ep   50/300  reward(last25)=  972.12  eps=0.436
+    ep   75/300  reward(last25)=  987.23  eps=0.288
+    ep  100/300  reward(last25)= 1050.35  eps=0.190
+    ep  125/300  reward(last25)= 1115.03  eps=0.125
+    ep  150/300  reward(last25)= 1185.21  eps=0.083
+    ep  175/300  reward(last25)= 1284.34  eps=0.054
+    ep  200/300  reward(last25)= 1379.95  eps=0.050
+    ep  225/300  reward(last25)= 1397.01  eps=0.050
+    ep  250/300  reward(last25)= 1410.92  eps=0.050
+    ep  275/300  reward(last25)= 1402.70  eps=0.050
+    ep  300/300  reward(last25)= 1401.00  eps=0.050
+Model saved to C:\Users\mzbzy10\Desktop\700\SOFTENG700-simulation\models\policy_mmtc_intensive_s1.pt
+
+Training mmtc_intensive seed 2 (300 x 500 steps)
+    ep   25/300  reward(last25)=  988.36  eps=0.661
+    ep   50/300  reward(last25)= 1157.01  eps=0.436
+    ep   75/300  reward(last25)= 1387.98  eps=0.288
+    ep  100/300  reward(last25)= 1378.08  eps=0.190
+    ep  125/300  reward(last25)= 1359.17  eps=0.125
+    ep  150/300  reward(last25)= 1380.53  eps=0.083
+    ep  175/300  reward(last25)= 1412.32  eps=0.054
+    ep  200/300  reward(last25)= 1413.96  eps=0.050
+    ep  225/300  reward(last25)= 1407.32  eps=0.050
+    ep  250/300  reward(last25)= 1397.41  eps=0.050
+    ep  275/300  reward(last25)= 1410.26  eps=0.050
+    ep  300/300  reward(last25)= 1408.68  eps=0.050
+Model saved to C:\Users\mzbzy10\Desktop\700\SOFTENG700-simulation\models\policy_mmtc_intensive_s2.pt
+  policy[balanced s0] on balanced         SSR=0.9958  actions_used=3
+  policy[balanced s0] on embb_intensive   SSR=0.9989  actions_used=4
+  policy[balanced s0] on urllc_intensive  SSR=0.9073  actions_used=3
+  policy[balanced s0] on mmtc_intensive   SSR=0.6882  actions_used=3
+  policy[balanced s1] on balanced         SSR=0.9955  actions_used=4
+  policy[balanced s1] on embb_intensive   SSR=0.9988  actions_used=4
+  policy[balanced s1] on urllc_intensive  SSR=0.9452  actions_used=4
+  policy[balanced s1] on mmtc_intensive   SSR=0.9759  actions_used=4
+  policy[balanced s2] on balanced         SSR=0.9673  actions_used=6
+  policy[balanced s2] on embb_intensive   SSR=0.9870  actions_used=5
+  policy[balanced s2] on urllc_intensive  SSR=0.9817  actions_used=6
+  policy[balanced s2] on mmtc_intensive   SSR=0.9451  actions_used=6
+  policy[embb_intensive s0] on balanced         SSR=0.5993  actions_used=4
+  policy[embb_intensive s0] on embb_intensive   SSR=0.9982  actions_used=3
+  policy[embb_intensive s0] on urllc_intensive  SSR=0.5208  actions_used=4
+  policy[embb_intensive s0] on mmtc_intensive   SSR=0.6750  actions_used=3
+  policy[embb_intensive s1] on balanced         SSR=0.7502  actions_used=4
+  policy[embb_intensive s1] on embb_intensive   SSR=0.7886  actions_used=4
+  policy[embb_intensive s1] on urllc_intensive  SSR=0.7702  actions_used=3
+  policy[embb_intensive s1] on mmtc_intensive   SSR=0.6547  actions_used=5
+  policy[embb_intensive s2] on balanced         SSR=0.9787  actions_used=5
+  policy[embb_intensive s2] on embb_intensive   SSR=0.9915  actions_used=4
+  policy[embb_intensive s2] on urllc_intensive  SSR=0.9225  actions_used=4
+  policy[embb_intensive s2] on mmtc_intensive   SSR=0.7769  actions_used=4
+  policy[urllc_intensive s0] on balanced         SSR=0.9144  actions_used=4
+  policy[urllc_intensive s0] on embb_intensive   SSR=0.9363  actions_used=4
+  policy[urllc_intensive s0] on urllc_intensive  SSR=0.9339  actions_used=4
+  policy[urllc_intensive s0] on mmtc_intensive   SSR=0.6590  actions_used=6
+  policy[urllc_intensive s1] on balanced         SSR=0.9962  actions_used=5
+  policy[urllc_intensive s1] on embb_intensive   SSR=0.9991  actions_used=6
+  policy[urllc_intensive s1] on urllc_intensive  SSR=0.9777  actions_used=6
+  policy[urllc_intensive s1] on mmtc_intensive   SSR=0.9606  actions_used=5
+  policy[urllc_intensive s2] on balanced         SSR=0.9641  actions_used=6
+  policy[urllc_intensive s2] on embb_intensive   SSR=0.9755  actions_used=5
+  policy[urllc_intensive s2] on urllc_intensive  SSR=0.9336  actions_used=7
+  policy[urllc_intensive s2] on mmtc_intensive   SSR=0.7776  actions_used=5
+  policy[mmtc_intensive s0] on balanced         SSR=0.8834  actions_used=4
+  policy[mmtc_intensive s0] on embb_intensive   SSR=0.9984  actions_used=1
+  policy[mmtc_intensive s0] on urllc_intensive  SSR=0.9056  actions_used=5
+  policy[mmtc_intensive s0] on mmtc_intensive   SSR=0.8358  actions_used=5
+  policy[mmtc_intensive s1] on balanced         SSR=0.9746  actions_used=6
+  policy[mmtc_intensive s1] on embb_intensive   SSR=0.9536  actions_used=5
+  policy[mmtc_intensive s1] on urllc_intensive  SSR=0.9711  actions_used=5
+  policy[mmtc_intensive s1] on mmtc_intensive   SSR=0.9383  actions_used=10
+  policy[mmtc_intensive s2] on balanced         SSR=0.8992  actions_used=4
+  policy[mmtc_intensive s2] on embb_intensive   SSR=0.9338  actions_used=4
+  policy[mmtc_intensive s2] on urllc_intensive  SSR=0.9001  actions_used=4
+  policy[mmtc_intensive s2] on mmtc_intensive   SSR=0.8615  actions_used=4
+
+==============================================================================
+SSR  mean +/- sd over seeds   (rows = trained on, cols = evaluated on)
+                      balanced          embb         urllc          mmtc
+        balanced  0.986+-0.016  0.995+-0.007  0.945+-0.037  0.870+-0.158
+            embb  0.776+-0.191  0.926+-0.119  0.738+-0.203  0.702+-0.065
+           urllc  0.958+-0.041  0.970+-0.032  0.948+-0.025  0.799+-0.152
+            mmtc  0.919+-0.049  0.962+-0.033  0.926+-0.039  0.879+-0.053
+
+Performance gap on B  (native SSR - transferred SSR; * = |gap| > 2 SEM)
+                      balanced          embb         urllc          mmtc
+        balanced       +0.000        -0.069        +0.004        +0.009 
+            embb       +0.210        +0.000        +0.211        +0.176*
+           urllc       +0.028        -0.044        +0.000        +0.079 
+            mmtc       +0.067*       -0.036        +0.023        +0.000 
+
+KL( D_AB || D_BB )  nats, over the discrete action set
+                      balanced          embb         urllc          mmtc
+        balanced        0.0000       11.9416        9.6700        6.1522
+            embb        8.8883        0.0000        7.9500        5.4673
+           urllc       10.4722        5.6250        0.0000       11.5169
+            mmtc        9.9824        4.0628       10.5704        0.0000
+
+Jensen-Shannon  (max = ln 2 = 0.693; at the max the supports are disjoint)
+                      balanced          embb         urllc          mmtc
+        balanced        0.0000        0.6369        0.6399        0.4520
+            embb        0.5295        0.0000        0.5077        0.4337
+           urllc        0.6511        0.4805        0.0000        0.6567
+            mmtc        0.5956        0.3592        0.5672        0.0000
+
+Wasserstein-1  (mean over slices, PRB fraction) -- headline distance
+                      balanced          embb         urllc          mmtc
+        balanced        0.0000        0.1297        0.1007        0.0856
+            embb        0.1020        0.0000        0.0872        0.0987
+           urllc        0.0966        0.0706        0.0000        0.1172
+            mmtc        0.0869        0.0678        0.0742        0.0000
+
+Native policy behaviour (diagonal): mean PRB fraction and action-set usage
+  balanced          eMBB=0.267  URLLC=0.416  mMTC=0.317   actions_used(mean over seeds)=4.3
+  embb_intensive    eMBB=0.458  URLLC=0.274  mMTC=0.268   actions_used(mean over seeds)=3.7
+  urllc_intensive   eMBB=0.259  URLLC=0.505  mMTC=0.236   actions_used(mean over seeds)=5.7
+  mmtc_intensive    eMBB=0.278  URLLC=0.265  mMTC=0.457   actions_used(mean over seeds)=6.3
+
+Off-diagonal summary (n = 12 ordered pairs)
+  corr(gap, KL)          = -0.0396
+  corr(gap, JS)          = -0.1016
+  corr(gap, Wasserstein) = 0.1086
+  mean gap = +0.0548   min = -0.0688   max = +0.2106
+  negative gaps (transfer beats native) = 3/12
+  gaps exceeding 2 SEM = 2/12
+==============================================================================
+
+Convergence check (episode reward, first fifth -> last fifth)
+  balanced           seed 0:   1366.2 ->   1433.7 (delta    +67.6, tail sd   21.9)
+  balanced           seed 1:   1367.8 ->   1441.0 (delta    +73.2, tail sd   17.7)
+  balanced           seed 2:   1352.6 ->   1445.4 (delta    +92.8, tail sd   10.2)
+  embb_intensive     seed 0:   1440.4 ->   1448.4 (delta     +8.0, tail sd    8.2)
+  embb_intensive     seed 1:   1442.9 ->   1449.0 (delta     +6.1, tail sd    5.7)
+  embb_intensive     seed 2:   1449.9 ->   1444.7 (delta     -5.2, tail sd    9.8)
+  urllc_intensive    seed 0:   1019.1 ->   1414.2 (delta   +395.1, tail sd   24.2)
+  urllc_intensive    seed 1:   1044.3 ->   1389.7 (delta   +345.5, tail sd   26.8)
+  urllc_intensive    seed 2:   1054.5 ->   1419.7 (delta   +365.2, tail sd   18.8)
+  mmtc_intensive     seed 0:    984.1 ->   1409.6 (delta   +425.5, tail sd   43.1)
+  mmtc_intensive     seed 1:    973.8 ->   1404.2 (delta   +430.5, tail sd   25.7)
+  mmtc_intensive     seed 2:   1125.0 ->   1402.7 (delta   +277.7, tail sd   72.8)
+
+Results written to C:\Users\mzbzy10\Desktop\700\SOFTENG700-simulation\results\transfer_20260904_002751.json
