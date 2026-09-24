@@ -33,7 +33,10 @@ class DQNAllocator:
         epsilon_min=0.05,
         epsilon_decay=0.9995,
         batch_size=64,
-        buffer_size=10000,
+        # 50k transitions is a third of a 300x500-step run; at the previous 10k
+        # the buffer held only the most recent ~7% of experience, which biases
+        # the updates toward whatever the policy is doing right now.
+        buffer_size=50000,
     ):
         self.total_prb = total_prb
 
@@ -93,7 +96,14 @@ class DQNAllocator:
 
         q_vals = self.q_net(states).gather(1, actions).squeeze()
         with torch.no_grad():
-            next_q  = self.target_net(next_states).max(1)[0]
+            # Double DQN: the online net *selects* the next action, the target net
+            # *evaluates* it. Plain DQN takes max over the target net's own
+            # Q-values, so the same network both picks and scores the action and
+            # any positive noise is systematically carried into the target —
+            # the value overestimation the survey (Section III-A, "RL algorithm")
+            # names as the reason [4] and [3] use DDQN and dueling variants.
+            next_actions = self.q_net(next_states).argmax(1, keepdim=True)
+            next_q  = self.target_net(next_states).gather(1, next_actions).squeeze(1)
             targets = rewards + self.gamma * next_q * (1 - dones)
 
         loss = self.loss_fn(q_vals, targets)

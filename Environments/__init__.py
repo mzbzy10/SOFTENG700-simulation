@@ -46,9 +46,37 @@ SLA_PARAMS = {"size_range"}
 # data rate, and PRB usage"), [10] (throughput for eMBB, queuing delay for
 # uRLLC) and Table III [12] ("minimum data rate and maximum delay").
 #
-#   eMBB   minimum data rate   — sustained PRBs/step served over a window
+#   eMBB   served ratio        — fraction of arriving work served, over a window
 #   URLLC  maximum delay       — task waiting time, in steps
 #   mMTC   maximum buffer      — queued task backlog
+#
+# eMBB was originally an absolute minimum data rate (min_rate 10 PRB/step over a
+# 20-step window). That is discarded because it made the KPI *environment-
+# invariant* and produced a degenerate eMBB-intensive scenario. The target was
+# min(min_rate * window, demand_w); eMBB's offered work exceeds 200 PRB per
+# 20-step window in every environment, so the target was the constant 200
+# everywhere and eMBB's SSR reduced to "did you allocate >= 10 PRB/step",
+# independent of how much eMBB traffic the environment actually carried.
+#
+# The consequence was measured, not hypothesised: under the absolute floor a
+# random policy scored 1456 of a possible 1500 reward in embb_intensive and 300
+# episodes of training added nothing (-4.9), because raising eMBB's load to 24
+# PRB/step left its requirement at 10 while dropping URLLC and mMTC to 12 and so
+# loosening *their* SLAs. "eMBB-intensive" was the only intensive scenario that
+# was easier than balanced. Policies trained there transferred worst of all
+# (mean gap +0.199 vs +0.045 to +0.054 for the other specialists), and excluding
+# that row moved corr(transfer gap, distributional distance) from 0.11 to 0.58.
+#
+# served_ratio fixes this because the target scales with arriving traffic: eMBB
+# must serve 80% of the work that arrives for it, so the intensive scenario
+# demands 19.2 PRB/step against balanced's 12.8. Raising min_rate would not have
+# worked — a higher absolute floor binds first in the environments where eMBB is
+# *least* loaded (their offered work approaches the target), inverting the
+# difficulty ordering again.
+#
+# The cost is that eMBB is no longer anchored to a 3GPP minimum-rate figure; it
+# is now a throughput-satisfaction ratio, which follows [10] ("eMBB's reward is
+# proportional to the throughput sum").
 #
 # These are contract terms, not traffic parameters: they MUST be identical in
 # every environment. If env A promised a 5-step URLLC delay and env B promised
@@ -70,13 +98,31 @@ SLA_PARAMS = {"size_range"}
 #   urllc     0.91/0.91   0.81/0.03   0.97/0.11
 #   mmtc      0.85/0.87   0.99/1.00   0.95/0.02
 #
-# min_rate sits below every environment's eMBB offered load (12-24 PRB/step) so
-# it acts as a floor rather than collapsing into "serve all demand".
+# served_ratio sits below 1.0 so eMBB is not required to clear all arriving work
+# every window, leaving the scheduler slack to defer eMBB during URLLC bursts.
+# It was swept over 0.8 / 0.9 / 1.0 against random, fixed and demand-proportional
+# policies; the spread between policies is almost flat in the threshold
+# (embb_intensive: 0.185 / 0.187 / 0.187), so 0.9 is chosen for the slack rather
+# than for discrimination.
+#
+# Honest limit of this fix: it corrects the *ordering* but does not equalise
+# difficulty. Before it, a random policy beat demand-proportional in
+# embb_intensive (0.939 vs 0.935) — the environment ranked policies backwards.
+# After it, proportional wins as it should (0.948 vs 0.918). But embb_intensive
+# still separates policies less than the others (spread 0.19 vs 0.30 for
+# mmtc_intensive and 0.47 for urllc_intensive), because at 48 PRB/step offered
+# against 50 available the two non-intensive slices sit at 12 PRB/step and are
+# over-served by almost any allocation, so only one constraint binds — and
+# eMBB's ratio KPI degrades linearly whereas URLLC's delay and mMTC's buffer
+# fail off a cliff once the backlog integrates. Equalising that would need the
+# offered load raised above the PRB budget in every environment, which would
+# invalidate the measured NORM_MAX_* caps. Report embb_intensive results with
+# this caveat rather than treating the four environments as equally sensitive.
 # --------------------------------------------------------------------------
 SLA = {
-    "eMBB":  {"kpi": "min_rate",   "min_rate": 10.0, "window": 20},
-    "URLLC": {"kpi": "max_delay",  "max_delay": 5},
-    "mMTC":  {"kpi": "max_buffer", "max_buffer": 60},
+    "eMBB":  {"kpi": "served_ratio", "served_ratio": 0.9, "window": 20},
+    "URLLC": {"kpi": "max_delay",    "max_delay": 5},
+    "mMTC":  {"kpi": "max_buffer",   "max_buffer": 60},
 }
 
 

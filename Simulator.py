@@ -40,11 +40,14 @@ class Simulator:
         # entry so any slice can use the "onoff" model
         self.onoff_state = {s: True for s in self.slice_names}
 
-        # eMBB's KPI is a sustained data rate, so served/demand are averaged over
-        # a trailing window rather than judged per step
+        # eMBB's KPI is a throughput ratio, so served/arrived are accumulated over
+        # a trailing window rather than judged per step. `arrived` is the work
+        # that *entered* the system each step, not the standing backlog: the
+        # backlog is a stock and the served figure is a flow, so dividing one by
+        # the other would not be a service ratio.
         self.rate_window = SLA["eMBB"]["window"]
         self.served_window = deque(maxlen=self.rate_window)
-        self.demand_window = deque(maxlen=self.rate_window)
+        self.arrived_window = deque(maxlen=self.rate_window)
 
         self.demands_hist = []
         self.served_hist = []
@@ -64,7 +67,7 @@ class Simulator:
         self.requests = []
         self.onoff_state = {s: True for s in self.slice_names}
         self.served_window = deque(maxlen=self.rate_window)
-        self.demand_window = deque(maxlen=self.rate_window)
+        self.arrived_window = deque(maxlen=self.rate_window)
         self.demands_hist = []
         self.served_hist = []
         self.queue_hist = []
@@ -109,9 +112,18 @@ class Simulator:
         return SliceTask(slice_name, size, self.time)
 
     def generate(self):
+        # Returns the PRB-work that arrived this step, per slice — eMBB's SSR is
+        # measured against arrivals, so this has to be reported, not inferred.
+        arrived = np.zeros(3)
+
         for slice_name in self.slice_names:
+            i = self.slice_index[slice_name]
             for _ in range(self.generate_arrivals(slice_name)):
-                self.requests.append(self.make_task(slice_name))
+                task = self.make_task(slice_name)
+                arrived[i] += task.size
+                self.requests.append(task)
+
+        return arrived
 
     def aggregate_demand(self):
         d = np.zeros(3)
@@ -182,14 +194,17 @@ class Simulator:
         """
         ssr = np.ones(3)
 
-        # eMBB — minimum data rate, judged over a trailing window because a data
-        # rate is inherently a rate over time. Compared against what was
-        # *achievable*: during a lull the slice cannot be served at min_rate, and
-        # is not held to it.
+        # eMBB — served ratio, judged over a trailing window because throughput is
+        # inherently a rate over time. The target scales with the traffic that
+        # actually arrived, so a scenario carrying more eMBB load demands
+        # proportionally more service; an absolute floor would not (see the SLA
+        # block in Environments/__init__.py). During a lull little arrives, the
+        # target shrinks with it, and the slice is not held to a rate it had no
+        # work to reach.
         i = self.slice_index["eMBB"]
         served_w = sum(s[i] for s in self.served_window)
-        demand_w = sum(d[i] for d in self.demand_window)
-        target = min(SLA["eMBB"]["min_rate"] * len(self.served_window), demand_w)
+        arrived_w = sum(a[i] for a in self.arrived_window)
+        target = SLA["eMBB"]["served_ratio"] * arrived_w
         ssr[i] = 1.0 if target <= 0 else np.clip(served_w / target, 0.0, 1.0)
 
         # URLLC — maximum delay: fraction of in-system tasks still within budget
@@ -218,14 +233,14 @@ class Simulator:
                 totals[i] += task.waiting_time(self.time)
         return np.divide(totals, counts, out=np.zeros(3), where=counts > 0)
 
-    def run(self, target_update_freq=10):
+    def run(self, target_update_freq=100):
         # initial observation before the first step: 4 signals x 3 slices
         current_state = np.zeros(4 * self.slices)
 
         for t in range(self.steps):
             self.time = t
 
-            self.generate()
+            arrived = self.generate()
             demand = self.aggregate_demand()
 
             # Action is chosen from the pre-serving state (proper MDP formulation)
@@ -235,10 +250,10 @@ class Simulator:
             queue    = self.get_queue()
             avg_wait = self.get_avg_wait()
 
-            # eMBB's rate KPI needs a trailing window; push this step before
+            # eMBB's throughput KPI needs a trailing window; push this step before
             # evaluating SSR so the current step counts toward it
             self.served_window.append(served)
-            self.demand_window.append(demand)
+            self.arrived_window.append(arrived)
             ssr = self.get_ssr(served, demand, queue)
 
             # update starvation streak: demand present but the slice was served

@@ -1,11 +1,19 @@
 .claude
 claude.md
 
-.png
-.jpg
+# generated plots (regenerable from rewards json / results)
+*.png
+*.jpg
 
 #models
 *.pt
+
+# per-seed training reward logs (diagnostic, not the transfer-matrix conclusions)
+*_rewards.json
+
+# run logs
+*.log
+run_log.txt
 
 # generated diagnostic output
 tests/arrival_dashboard.html

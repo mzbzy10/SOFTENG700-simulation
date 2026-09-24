@@ -57,8 +57,26 @@ from Environments import ENVIRONMENTS, SLICE_NAMES
 
 ENV_KEYS = ["balanced", "embb_intensive", "urllc_intensive", "mmtc_intensive"]
 
-RESULTS_DIR = os.path.join(os.path.dirname(__file__), "results")
-MODELS_DIR = os.path.join(os.path.dirname(__file__), "models")
+_ROOT = os.path.dirname(__file__)
+
+# Every run writes into results/<tag>/ and models/<tag>/ so a new experiment
+# cannot overwrite an earlier one. Changing the simulator (SLA definitions,
+# reward, agent) makes old and new numbers incomparable, so the artifacts have
+# to be kept side by side rather than replaced in place.
+RUN_TAG = "v2_ddqn_servedratio"
+RESULTS_DIR = os.path.join(_ROOT, "results", RUN_TAG)
+MODELS_DIR = os.path.join(_ROOT, "models", RUN_TAG)
+
+
+def set_run_tag(tag):
+    """Point the results and models directories at a named run group."""
+    global RUN_TAG, RESULTS_DIR, MODELS_DIR
+    RUN_TAG = tag
+    RESULTS_DIR = os.path.join(_ROOT, "results", tag)
+    MODELS_DIR = os.path.join(_ROOT, "models", tag)
+    os.makedirs(RESULTS_DIR, exist_ok=True)
+    os.makedirs(MODELS_DIR, exist_ok=True)
+    return RUN_TAG
 
 # Independent training runs per environment. Three is the minimum that gives a
 # usable spread; a single DQN run collapses often enough that one seed cannot
@@ -472,6 +490,7 @@ def run_transfer_matrix(
         "agg": agg,
         "pairs": pairs,
         "config": {
+            "run_tag": RUN_TAG,
             "n_seeds": n_seeds,
             "train_episodes": train_episodes,
             "eval_episodes": eval_episodes,
@@ -689,7 +708,12 @@ if __name__ == "__main__":
     ap.add_argument("--reuse", action="store_true", help="reuse cached models in models/ instead of retraining")
     ap.add_argument("--no-save", action="store_true", help="do not write models or JSON")
     ap.add_argument("--no-plot", action="store_true", help="skip the training-curve figure")
+    ap.add_argument("--tag", default=RUN_TAG,
+                    help="run group; artifacts go to results/<tag>/ and models/<tag>/")
     args = ap.parse_args()
+
+    set_run_tag(args.tag)
+    print(f"run tag: {args.tag}  ->  results/{args.tag}/  models/{args.tag}/")
 
     results = run_transfer_matrix(
         env_keys=args.envs,
