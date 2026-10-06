@@ -60,7 +60,7 @@ def gap_matrix(run):
 # ---- 1. transfer-gap heatmap (v3) ---------------------------------------
 def fig_heatmap(run="v3", name="gap_heatmap"):
     m, sig = gap_matrix(run)
-    fig, ax = plt.subplots(figsize=(5.6, 3.4))
+    fig, ax = plt.subplots(figsize=(5.6, 3.7))
     norm = TwoSlopeNorm(vmin=-0.15, vcenter=0, vmax=0.15)
     ax.imshow(m, cmap="RdBu_r", norm=norm, aspect="auto")
     for i in range(4):
@@ -93,7 +93,7 @@ def fig_noise():
         gap.append(np.mean(g))
         noise.append(np.mean(n))
     x = np.arange(3)
-    fig, ax = plt.subplots(figsize=(5.6, 3.6))
+    fig, ax = plt.subplots(figsize=(5.6, 3.9))
     w = 0.36
     b1 = ax.bar(x - w / 2, gap, w, color="#0b3d91", label="Transfer gap (mean |gap|)")
     b2 = ax.bar(x + w / 2, noise, w, color="#E69F00", label="Seed-to-seed SD (same env.)")
@@ -146,7 +146,7 @@ def fig_scatter():
 def fig_policies():
     pol = [("Fixed 50/30/20", "fixed_50_30_20", "#a9b3c0"), ("Random", "random", "#6b7686"),
            ("Demand-prop.", "demand_proportional", "#E69F00")]
-    fig, ax = plt.subplots(figsize=(5.6, 3.9))
+    fig, ax = plt.subplots(figsize=(5.6, 4.0))
     x = np.arange(4)
     w = 0.2
     vals = []

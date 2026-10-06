@@ -105,25 +105,29 @@ table{font-size:24pt}
     <div class="row2">
       <div class="card">
         <h2><span class="n">1</span>The problem</h2>
-        <p style="font-size:24pt">Every millisecond, a 5G base station must share its limited radio capacity between <b>three channels</b>, each carrying a different type of task from its connected devices:</p>
+        <p style="font-size:24pt">Every millisecond, a 5G base station must share its limited radio capacity between <b>three channels</b>, each carrying a different type of task:</p>
         <div class="need" style="font-size:24pt;margin:3mm 0">
           <span class="chip e">eMBB</span><span>video and downloads</span>
           <span class="chip u">URLLC</span><span>robots and cars</span>
           <span class="chip m">mMTC</span><span>sensor readings</span>
         </div>
-        <p style="font-size:24pt">An AI scheduler learns this split by trial and error, but real traffic keeps changing.</p>
+        <p style="font-size:24pt">Reinforcement learning (RL) is widely proposed to make this decision automatically.</p>
         <div class="takeaway" style="font-size:25pt">What if the traffic mix changes after training?</div>
       </div>
       <div class="card">
         <h2><span class="n">2</span>Simulator &amp; four environments</h2>
-        <div style="display:grid;grid-template-columns:1.45fr 1fr;gap:7mm;align-items:center">
-          <svg class="fig" viewBox="0 0 560 405" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
-          <defs><marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6675"/></marker></defs>
+        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:8mm;align-items:center">
+          <svg class="fig" viewBox="0 0 596 366" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+          <defs><marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6675"/></marker><marker id="ar2" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#5b6675"/></marker><marker id="arb" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="14" refY="8" orient="auto"><path d="M0,0 L16,8 L0,16 z" fill="#0b2a5b"/></marker></defs>
           <g font-size="19" fill="#1b2430">
             <text x="0" y="16" font-weight="700" fill="#5b6675">TRAFFIC</text>
             <text x="200" y="16" font-weight="700" fill="#5b6675">QUEUE</text>
-            <text x="376" y="16" font-weight="700" fill="#5b6675">SLA KPI → SSR</text>
+            
           </g>
+          <!-- allocator -->
+          <rect x="186" y="24" width="178" height="338" rx="14" fill="#e8edf5" stroke="#0b2a5b" stroke-width="4" stroke-dasharray="10 6"/>
+          <text x="275" y="322" font-size="24" font-weight="800" fill="#0b2a5b" text-anchor="middle">ALLOCATOR</text>
+          <text x="275" y="346" font-size="15" fill="#1b2430" text-anchor="middle">decides resource split</text>
           <!-- eMBB row -->
           <g transform="translate(0,28)">
             <rect width="170" height="76" rx="10" fill="#e3f0fa" stroke="#0072B2" stroke-width="2.5"/>
@@ -133,10 +137,6 @@ table{font-size:24pt}
             <path d="M172 38 h24" stroke="#5b6675" stroke-width="3" marker-end="url(#ar)"/>
             <rect x="200" width="150" height="76" rx="10" fill="#fff" stroke="#b8c2cf" stroke-width="2"/>
             <g fill="#0072B2"><rect x="210" y="14" width="26" height="46"/><rect x="240" y="14" width="26" height="46"/><rect x="270" y="14" width="26" height="46"/><rect x="300" y="14" width="26" height="46" opacity=".45"/></g>
-            <path d="M352 38 h24" stroke="#5b6675" stroke-width="3" marker-end="url(#ar)"/>
-            <rect x="380" width="180" height="76" rx="10" fill="#e3f0fa" stroke="#0072B2" stroke-width="2.5"/>
-            <text x="390" y="31" font-size="18.5" font-weight="700" fill="#1b2430">served ratio</text>
-            <text x="390" y="57" font-size="18.5" fill="#1b2430">≥ 90 % / 20 steps</text>
           </g>
           <!-- URLLC row -->
           <g transform="translate(0,116)">
@@ -147,10 +147,6 @@ table{font-size:24pt}
             <path d="M172 38 h24" stroke="#5b6675" stroke-width="3" marker-end="url(#ar)"/>
             <rect x="200" width="150" height="76" rx="10" fill="#fff" stroke="#b8c2cf" stroke-width="2"/>
             <g fill="#D55E00"><rect x="210" y="14" width="12" height="46"/><rect x="226" y="14" width="12" height="46"/><rect x="242" y="14" width="12" height="46"/><rect x="258" y="14" width="12" height="46"/><rect x="274" y="14" width="12" height="46"/><rect x="290" y="14" width="12" height="46"/><rect x="306" y="14" width="12" height="46" opacity=".45"/></g>
-            <path d="M352 38 h24" stroke="#5b6675" stroke-width="3" marker-end="url(#ar)"/>
-            <rect x="380" width="180" height="76" rx="10" fill="#fbeadd" stroke="#D55E00" stroke-width="2.5"/>
-            <text x="390" y="31" font-size="18.5" font-weight="700" fill="#1b2430">max delay</text>
-            <text x="390" y="57" font-size="18.5" fill="#1b2430">≤ 5 steps (5 ms)</text>
           </g>
           <!-- mMTC row -->
           <g transform="translate(0,204)">
@@ -161,21 +157,28 @@ table{font-size:24pt}
             <path d="M172 38 h24" stroke="#5b6675" stroke-width="3" marker-end="url(#ar)"/>
             <rect x="200" width="150" height="76" rx="10" fill="#fff" stroke="#b8c2cf" stroke-width="2"/>
             <g fill="#009E73"><g id="d"><rect x="209" y="30" width="8" height="30"/><rect x="220" y="30" width="8" height="30"/><rect x="231" y="30" width="8" height="30"/><rect x="242" y="30" width="8" height="30"/><rect x="253" y="30" width="8" height="30"/><rect x="264" y="30" width="8" height="30"/><rect x="275" y="30" width="8" height="30"/><rect x="286" y="30" width="8" height="30"/><rect x="297" y="30" width="8" height="30"/><rect x="308" y="30" width="8" height="30"/><rect x="319" y="30" width="8" height="30" opacity=".45"/><rect x="330" y="30" width="8" height="30" opacity=".45"/></g></g>
-            <path d="M352 38 h24" stroke="#5b6675" stroke-width="3" marker-end="url(#ar)"/>
-            <rect x="380" width="180" height="76" rx="10" fill="#dff3ec" stroke="#009E73" stroke-width="2.5"/>
-            <text x="390" y="31" font-size="18.5" font-weight="700" fill="#1b2430">max buffer</text>
-            <text x="390" y="57" font-size="18.5" fill="#1b2430">≤ 60 queued tasks</text>
           </g>
-          <!-- agent -->
-          <rect x="0" y="318" width="560" height="87" rx="12" fill="#0b2a5b"/>
-          <text x="16" y="349" font-size="23" font-weight="800" fill="#ffd166">DQN agent · every step (1 TTI = 1 ms)</text>
-          <text x="16" y="377" font-size="18.5" fill="#fff">observes 12 values (demand, queue, SSR, wait) →</text>
-          <text x="16" y="399" font-size="18.5" fill="#fff">chooses 1 of 36 splits of the 50 PRBs</text>
-          <path d="M275 316 V288" stroke="#0b2a5b" stroke-width="4" marker-end="url(#ar)"/>
-          <text x="288" y="306" font-size="17" fill="#1b2430" font-weight="700">PRBs</text>
-          <path d="M470 288 V316" stroke="#D55E00" stroke-width="4" stroke-dasharray="7 5" marker-end="url(#ar)"/>
-          <text x="482" y="308" font-size="17" fill="#D55E00" font-weight="700">reward</text>
-        </svg>
+          
+          <text x="392" y="16" font-size="19" font-weight="700" fill="#5b6675">SERVED</text>
+          <path d="M366 66 h22" stroke="#0b2a5b" stroke-width="4" marker-end="url(#arb)"/>
+          <rect x="392" y="28" width="196" height="76" rx="10" fill="#e3f0fa" stroke="#0072B2" stroke-width="2.5"/>
+          <text x="404" y="56" font-size="20" font-weight="800" fill="#0072B2">Tasks solved</text>
+          <rect x="402" y="68" width="82" height="24" rx="6" fill="#0b2a5b"/><text x="443" y="86" font-size="14.5" font-weight="800" fill="#fff" text-anchor="middle">Resource</text>
+          <path d="M488 80 h12" stroke="#5b6675" stroke-width="3" marker-end="url(#ar2)"/>
+          <rect x="500" y="68" width="22" height="24" rx="4" fill="#0072B2"/><text x="511" y="86" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text><rect x="526" y="68" width="22" height="24" rx="4" fill="#0072B2"/><text x="537" y="86" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text><rect x="552" y="68" width="22" height="24" rx="4" fill="#0072B2"/><text x="563" y="86" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text>
+          <path d="M366 154 h22" stroke="#0b2a5b" stroke-width="4" marker-end="url(#arb)"/>
+          <rect x="392" y="116" width="196" height="76" rx="10" fill="#fbeadd" stroke="#D55E00" stroke-width="2.5"/>
+          <text x="404" y="144" font-size="20" font-weight="800" fill="#D55E00">Tasks solved</text>
+          <rect x="402" y="156" width="82" height="24" rx="6" fill="#0b2a5b"/><text x="443" y="174" font-size="14.5" font-weight="800" fill="#fff" text-anchor="middle">Resource</text>
+          <path d="M488 168 h12" stroke="#5b6675" stroke-width="3" marker-end="url(#ar2)"/>
+          <rect x="500" y="156" width="22" height="24" rx="4" fill="#D55E00"/><text x="511" y="174" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text><rect x="526" y="156" width="22" height="24" rx="4" fill="#D55E00"/><text x="537" y="174" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text><rect x="552" y="156" width="22" height="24" rx="4" fill="#D55E00"/><text x="563" y="174" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text>
+          <path d="M366 242 h22" stroke="#0b2a5b" stroke-width="4" marker-end="url(#arb)"/>
+          <rect x="392" y="204" width="196" height="76" rx="10" fill="#dff3ec" stroke="#009E73" stroke-width="2.5"/>
+          <text x="404" y="232" font-size="20" font-weight="800" fill="#009E73">Tasks solved</text>
+          <rect x="402" y="244" width="82" height="24" rx="6" fill="#0b2a5b"/><text x="443" y="262" font-size="14.5" font-weight="800" fill="#fff" text-anchor="middle">Resource</text>
+          <path d="M488 256 h12" stroke="#5b6675" stroke-width="3" marker-end="url(#ar2)"/>
+          <rect x="500" y="244" width="22" height="24" rx="4" fill="#009E73"/><text x="511" y="262" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text><rect x="526" y="244" width="22" height="24" rx="4" fill="#009E73"/><text x="537" y="262" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text><rect x="552" y="244" width="22" height="24" rx="4" fill="#009E73"/><text x="563" y="262" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text>
+          </svg>
           <div>
             <table>
               <tr><th>Environment</th><th>Load share</th></tr>
@@ -193,7 +196,7 @@ table{font-size:24pt}
     <div class="row12">
       <div class="card">
         <h2><span class="n">3</span>How we measure the loss</h2>
-        <svg class="fig" style="width:86%" viewBox="0 0 560 352" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+        <svg class="fig" style="width:92%;margin:0 auto" viewBox="0 0 560 352" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
           <defs><marker id="a2" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6675"/></marker></defs>
           <g font-size="20" text-anchor="middle">
             <rect x="0" y="0" width="130" height="56" rx="10" fill="#e8edf5" stroke="#123a7a" stroke-width="2.5"/><text x="65" y="36" font-weight="700" fill="#0b2a5b">Train on A</text>
@@ -227,13 +230,13 @@ table{font-size:24pt}
             <text x="280" y="338" fill="#fff" font-size="19.5">Wasserstein-1 (and KL) between D<tspan font-size="13" dy="4">AB</tspan><tspan dy="-4"> and D</tspan><tspan font-size="13" dy="4">BB</tspan></text>
           </g>
         </svg>
-        <div class="cap" style="margin-top:3mm">Gap = SSR(native) − SSR(transferred). SSR = share of SLA targets met.</div>
+        
       </div>
-      <div class="card">
+      <div class="card" style="justify-content:space-between;padding-bottom:12mm">
         <h2><span class="n">4</span>Reward &amp; agent</h2>
-        <div class="formula">R = Σ SSR − 0.1·backlog</div>
-        <p>Rewarding SLA satisfaction directly matches the evaluation metric and avoids trading SLAs for efficiency.</p>
-        <div class="need" style="margin-top:6mm"><span class="chip" style="background:#123a7a">Agent</span><span>Deep Q-Network</span><span class="chip" style="background:#123a7a">Seeds</span><span>5 per environment</span><span class="chip" style="background:#123a7a">Training</span><span>600 episodes</span></div>
+        <div class="formula" style="font-size:40pt;padding:6mm">R = Σ SSR − 0.1·backlog</div>
+        <p><b>SSR</b> = how well each channel's quality target is met (0 to 1). Rewarding it directly matches our evaluation metric.</p>
+        <div class="need" style="margin-top:6mm;font-size:30pt;gap:5mm 6mm"><span class="chip" style="background:#123a7a">Agent</span><span>Deep Q-Network</span><span class="chip" style="background:#123a7a">Seeds</span><span>5 per environment</span><span class="chip" style="background:#123a7a">Training</span><span>600 episodes</span></div>
       </div>
     </div>
 
