@@ -54,13 +54,15 @@ def compute_reward(served, demand, queue, alloc, ssr, starve_steps, total_prb):
 
     where, per slice i:
         SSR_i   = satisfaction of slice i's own KPI, from Simulator.get_ssr:
-                  eMBB min data rate, URLLC max delay, mMTC max buffer   (0-1)
+                  eMBB served ratio, URLLC max delay, mMTC max buffer    (0-1)
         q_hat_i = queue_i / NORM_MAX_QUEUE   normalized backlog          (0-1)
 
     Slices are weighted equally on purpose. Any other weighting is a claim about
     relative slice priority that would have to be justified separately, and
-    per-slice SLA difficulty is already expressed by the deadlines (10 / 80 /
-    100 steps) rather than needing to be encoded a second time.
+    per-slice SLA difficulty is already expressed by the thresholds themselves
+    (eMBB 90% served ratio over a 20-step window, URLLC 5-step delay, mMTC
+    60-task buffer; see Environments.SLA) rather than needing to be encoded a
+    second time.
 
     Range: [-3 * LAMBDA_QUEUE, 3].
 

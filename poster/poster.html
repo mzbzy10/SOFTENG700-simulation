@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Poster – Transfer Gaps in RL for RAN Slicing</title>
+<style>
+/* A1 portrait 594 x 841 mm + 6 mm bleed on every side = 606 x 853 mm */
+@page { size: 606mm 853mm; margin: 0; }
+:root {
+  --navy:#0b2a5b; --navy2:#123a7a; --ink:#1b2430; --muted:#5b6675; --line:#d9dee5;
+  --paper:#ffffff; --tint:#f1f4f9;
+  --embb:#0072B2; --urllc:#D55E00; --mmtc:#009E73; --amber:#E69F00;
+  --bleed:6mm; --margin:15mm; --gap:5mm;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { width:606mm; height:853mm; background:var(--paper); }
+body { font-family:"Segoe UI", Arial, sans-serif; color:var(--ink); font-size:19pt; line-height:1.3;
+       -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.sheet { position:relative; width:606mm; height:853mm; overflow:hidden; background:var(--paper); }
+/* everything the viewer must read stays inside bleed + margin */
+.safe { position:absolute; inset:calc(var(--bleed) + var(--margin)); display:flex; flex-direction:column; gap:var(--gap); }
+
+/* ---------- header (bleeds to the trim edge) ---------- */
+.header { position:absolute; left:0; top:0; width:606mm; height:102mm; background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%); color:#fff; }
+.header .in { position:absolute; left:calc(var(--bleed) + var(--margin)); right:calc(var(--bleed) + var(--margin)); top:calc(var(--bleed) + 4mm); }
+.kicker { font-size:19pt; letter-spacing:.14em; text-transform:uppercase; color:#9fc2ff; font-weight:600; }
+h1 { font-size:44pt; line-height:1.08; font-weight:800; margin:2mm 0 3mm; letter-spacing:-.01em; }
+.question { font-size:23pt; color:#dce9ff; font-style:italic; margin-bottom:3mm; }
+.people { display:flex; gap:12mm; font-size:21pt; align-items:baseline; flex-wrap:wrap; }
+.people b { font-weight:700; }
+.people .dim { color:#b9cdf0; font-size:18pt; }
+.todo { background:#ffe27a; color:#4a3b00; padding:0 2mm; border-radius:1.5mm; }
+
+.content { position:absolute; left:calc(var(--bleed) + var(--margin)); right:calc(var(--bleed) + var(--margin));
+           top:calc(102mm + 6mm); bottom:calc(var(--bleed) + 7mm); display:flex; flex-direction:column; gap:var(--gap); }
+
+/* ---------- key findings strip ---------- */
+.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--gap); }
+.stat { background:var(--navy); color:#fff; border-radius:4mm; padding:3mm 5mm 3.5mm; }
+.stat .big { font-size:34pt; font-weight:800; line-height:1.05; color:#ffd166; }
+.stat .lab { font-size:15.5pt; line-height:1.25; color:#e6eefc; margin-top:1.5mm; }
+
+/* ---------- grid + cards ---------- */
+.row { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--gap); }
+.card { background:var(--tint); border-radius:4mm; padding:4mm 5mm 5mm; border-top:2.2mm solid var(--navy2); min-width:0; display:flex; flex-direction:column; }
+.card.span2 { grid-column:span 2; }
+h2 { font-size:25pt; font-weight:800; color:var(--navy); line-height:1.1; margin-bottom:3mm; display:flex; gap:3mm; align-items:center; }
+h2 .n { flex:none; background:var(--navy2); color:#fff; border-radius:50%; width:12mm; height:12mm; display:inline-flex; align-items:center; justify-content:center; font-size:20pt; }
+p { margin-bottom:2.5mm; }
+p:last-child { margin-bottom:0; }
+ul { padding-left:7mm; }
+li { margin-bottom:1.8mm; }
+b, strong { font-weight:700; }
+.fig { width:100%; display:block; }
+.cap { font-size:16.5pt; color:var(--muted); line-height:1.28; margin-top:2mm; }
+.takeaway { margin-top:auto; padding-top:3mm; font-size:19.5pt; font-weight:700; color:var(--navy); line-height:1.25; }
+.takeaway::before { content:"▸ "; color:var(--urllc); }
+.chip { display:inline-block; font-weight:700; padding:0 2.2mm; border-radius:2mm; color:#fff; font-size:.92em; }
+.chip.e{background:var(--embb)} .chip.u{background:var(--urllc)} .chip.m{background:var(--mmtc)}
+.formula { background:#fff; border:.6mm solid var(--line); border-radius:3mm; padding:3.5mm 4mm; font-size:24pt; text-align:center; margin:2mm 0 3mm; font-family:"Cambria Math", "Times New Roman", serif; }
+table { width:100%; border-collapse:collapse; font-size:17.5pt; background:#fff; border-radius:2mm; overflow:hidden; }
+th { background:var(--navy2); color:#fff; text-align:left; padding:1.5mm 2.5mm; font-weight:700; }
+td { padding:1.6mm 2.5mm; border-top:.4mm solid var(--line); vertical-align:middle; }
+.mix { display:flex; height:8mm; border-radius:1.5mm; overflow:hidden; min-width:46mm; }
+.mix span { display:flex; align-items:center; justify-content:center; color:#fff; font-size:14pt; font-weight:700; }
+.mix .e{background:var(--embb)} .mix .u{background:var(--urllc)} .mix .m{background:var(--mmtc)}
+.small { font-size:16.5pt; }
+.refs { font-size:13.5pt; line-height:1.28; color:var(--muted); }
+.refs li { margin-bottom:.8mm; }
+.split { display:grid; grid-template-columns:1fr 1fr; gap:6mm; }
+.who { background:#fff; border:.6mm solid var(--line); border-radius:3mm; padding:3mm 4mm; }
+.who h3 { font-size:20pt; color:var(--navy); margin-bottom:1.5mm; }
+.footer { position:absolute; left:calc(var(--bleed) + var(--margin)); right:calc(var(--bleed) + var(--margin)); bottom:calc(var(--bleed) + 3mm); font-size:13.5pt; color:var(--muted); display:flex; justify-content:space-between; }
+
+body{font-size:27pt;line-height:1.3}
+h1{font-size:60pt;line-height:1.06}
+.question{font-size:30pt}
+.kicker{font-size:21pt}
+.people{font-size:25pt;margin-top:2mm}.people .dim{font-size:21pt}
+h2{font-size:38pt;margin-bottom:5mm}
+h2 .n{width:17mm;height:17mm;font-size:28pt}
+.card{padding:7mm 9mm 8mm}
+.row2{display:grid;grid-template-columns:1.1fr 2fr;gap:var(--gap)}
+.row12{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+.cap{font-size:21pt}
+.takeaway{font-size:26pt;line-height:1.2}
+.big{font-size:27pt}
+.need{display:grid;grid-template-columns:auto 1fr;gap:3mm 5mm;align-items:center;margin:4mm 0}
+.chip{font-size:.85em;padding:0 3mm}
+table{font-size:24pt}
+.mix{height:12mm;min-width:70mm}.mix span{font-size:20pt}
+.formula{font-size:34pt}
+.concl li{font-size:28pt;margin-bottom:3mm}
+.who h3{font-size:26pt}.who p{font-size:22pt}
+.refs{font-size:16pt}
+.content{gap:5mm}
+</style></head>
+<body><div class="sheet">
+  <div class="header"><div class="in">
+    <div class="kicker">SOFTENG 700 · Project <span class="todo">102</span></div>
+    <h1>When the cellular traffic changes, how much does an RL scheduler lose?</h1>
+    <div class="question">Quantifying transfer gaps in 5G RAN slicing</div>
+    <div class="people"><span><b>Mark Zhao</b> &amp; <b>Stanley Findsen</b></span><span class="dim">Supervisor: Dev Singh</span><span class="dim">University of Auckland</span></div>
+  </div></div>
+
+  <div class="content">
+    <div class="row2">
+      <div class="card">
+        <h2><span class="n">1</span>The problem</h2>
+        <p style="font-size:24pt">Every millisecond, a 5G base station must share its limited radio capacity between <b>three channels</b>, each carrying a different type of task from its connected devices:</p>
+        <div class="need" style="font-size:24pt;margin:3mm 0">
+          <span class="chip e">eMBB</span><span>video and downloads</span>
+          <span class="chip u">URLLC</span><span>robots and cars</span>
+          <span class="chip m">mMTC</span><span>sensor readings</span>
+        </div>
+        <p style="font-size:24pt">An AI scheduler learns this split by trial and error, but real traffic keeps changing.</p>
+        <div class="takeaway" style="font-size:25pt">What if the traffic mix changes after training?</div>
+      </div>
+      <div class="card">
+        <h2><span class="n">2</span>Simulator &amp; four environments</h2>
+        <div style="display:grid;grid-template-columns:1.45fr 1fr;gap:7mm;align-items:center">
+          <svg class="fig" viewBox="0 0 560 405" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+          <defs><marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6675"/></marker></defs>
+          <g font-size="19" fill="#1b2430">
+            <text x="0" y="16" font-weight="700" fill="#5b6675">TRAFFIC</text>
+            <text x="200" y="16" font-weight="700" fill="#5b6675">QUEUE</text>
+            <text x="376" y="16" font-weight="700" fill="#5b6675">SLA KPI → SSR</text>
+          </g>
+          <!-- eMBB row -->
+          <g transform="translate(0,28)">
+            <rect width="170" height="76" rx="10" fill="#e3f0fa" stroke="#0072B2" stroke-width="2.5"/>
+            <text x="10" y="26" font-size="21" font-weight="700" fill="#0072B2">eMBB</text>
+            <text x="10" y="50" font-size="16.5" fill="#1b2430">bursty ON/OFF</text>
+            <path d="M8 70 h14 v-14 h22 v14 h32 v-14 h18 v14 h30 v-14 h20 v14 h16" fill="none" stroke="#0072B2" stroke-width="3"/>
+            <path d="M172 38 h24" stroke="#5b6675" stroke-width="3" marker-end="url(#ar)"/>
+            <rect x="200" width="150" height="76" rx="10" fill="#fff" stroke="#b8c2cf" stroke-width="2"/>
+            <g fill="#0072B2"><rect x="210" y="14" width="26" height="46"/><rect x="240" y="14" width="26" height="46"/><rect x="270" y="14" width="26" height="46"/><rect x="300" y="14" width="26" height="46" opacity=".45"/></g>
+            <path d="M352 38 h24" stroke="#5b6675" stroke-width="3" marker-end="url(#ar)"/>
+            <rect x="380" width="180" height="76" rx="10" fill="#e3f0fa" stroke="#0072B2" stroke-width="2.5"/>
+            <text x="390" y="31" font-size="18.5" font-weight="700" fill="#1b2430">served ratio</text>
+            <text x="390" y="57" font-size="18.5" fill="#1b2430">≥ 90 % / 20 steps</text>
+          </g>
+          <!-- URLLC row -->
+          <g transform="translate(0,116)">
+            <rect width="170" height="76" rx="10" fill="#fbeadd" stroke="#D55E00" stroke-width="2.5"/>
+            <text x="10" y="26" font-size="21" font-weight="700" fill="#D55E00">URLLC</text>
+            <text x="10" y="50" font-size="16.5" fill="#1b2430">periodic batches</text>
+            <path d="M12 70 v-16 M40 70 v-16 M68 70 v-16 M96 70 v-16 M124 70 v-16 M152 70 v-16" stroke="#D55E00" stroke-width="5"/>
+            <path d="M172 38 h24" stroke="#5b6675" stroke-width="3" marker-end="url(#ar)"/>
+            <rect x="200" width="150" height="76" rx="10" fill="#fff" stroke="#b8c2cf" stroke-width="2"/>
+            <g fill="#D55E00"><rect x="210" y="14" width="12" height="46"/><rect x="226" y="14" width="12" height="46"/><rect x="242" y="14" width="12" height="46"/><rect x="258" y="14" width="12" height="46"/><rect x="274" y="14" width="12" height="46"/><rect x="290" y="14" width="12" height="46"/><rect x="306" y="14" width="12" height="46" opacity=".45"/></g>
+            <path d="M352 38 h24" stroke="#5b6675" stroke-width="3" marker-end="url(#ar)"/>
+            <rect x="380" width="180" height="76" rx="10" fill="#fbeadd" stroke="#D55E00" stroke-width="2.5"/>
+            <text x="390" y="31" font-size="18.5" font-weight="700" fill="#1b2430">max delay</text>
+            <text x="390" y="57" font-size="18.5" fill="#1b2430">≤ 5 steps (5 ms)</text>
+          </g>
+          <!-- mMTC row -->
+          <g transform="translate(0,204)">
+            <rect width="170" height="76" rx="10" fill="#dff3ec" stroke="#009E73" stroke-width="2.5"/>
+            <text x="10" y="26" font-size="21" font-weight="700" fill="#009E73">mMTC</text>
+            <text x="10" y="50" font-size="16.5" fill="#1b2430">Poisson sensors</text>
+            <g fill="#009E73"><circle cx="16" cy="64" r="4"/><circle cx="31" cy="58" r="4"/><circle cx="44" cy="66" r="4"/><circle cx="52" cy="57" r="4"/><circle cx="73" cy="65" r="4"/><circle cx="88" cy="58" r="4"/><circle cx="101" cy="66" r="4"/><circle cx="118" cy="60" r="4"/><circle cx="131" cy="66" r="4"/><circle cx="148" cy="58" r="4"/></g>
+            <path d="M172 38 h24" stroke="#5b6675" stroke-width="3" marker-end="url(#ar)"/>
+            <rect x="200" width="150" height="76" rx="10" fill="#fff" stroke="#b8c2cf" stroke-width="2"/>
+            <g fill="#009E73"><g id="d"><rect x="209" y="30" width="8" height="30"/><rect x="220" y="30" width="8" height="30"/><rect x="231" y="30" width="8" height="30"/><rect x="242" y="30" width="8" height="30"/><rect x="253" y="30" width="8" height="30"/><rect x="264" y="30" width="8" height="30"/><rect x="275" y="30" width="8" height="30"/><rect x="286" y="30" width="8" height="30"/><rect x="297" y="30" width="8" height="30"/><rect x="308" y="30" width="8" height="30"/><rect x="319" y="30" width="8" height="30" opacity=".45"/><rect x="330" y="30" width="8" height="30" opacity=".45"/></g></g>
+            <path d="M352 38 h24" stroke="#5b6675" stroke-width="3" marker-end="url(#ar)"/>
+            <rect x="380" width="180" height="76" rx="10" fill="#dff3ec" stroke="#009E73" stroke-width="2.5"/>
+            <text x="390" y="31" font-size="18.5" font-weight="700" fill="#1b2430">max buffer</text>
+            <text x="390" y="57" font-size="18.5" fill="#1b2430">≤ 60 queued tasks</text>
+          </g>
+          <!-- agent -->
+          <rect x="0" y="318" width="560" height="87" rx="12" fill="#0b2a5b"/>
+          <text x="16" y="349" font-size="23" font-weight="800" fill="#ffd166">DQN agent · every step (1 TTI = 1 ms)</text>
+          <text x="16" y="377" font-size="18.5" fill="#fff">observes 12 values (demand, queue, SSR, wait) →</text>
+          <text x="16" y="399" font-size="18.5" fill="#fff">chooses 1 of 36 splits of the 50 PRBs</text>
+          <path d="M275 316 V288" stroke="#0b2a5b" stroke-width="4" marker-end="url(#ar)"/>
+          <text x="288" y="306" font-size="17" fill="#1b2430" font-weight="700">PRBs</text>
+          <path d="M470 288 V316" stroke="#D55E00" stroke-width="4" stroke-dasharray="7 5" marker-end="url(#ar)"/>
+          <text x="482" y="308" font-size="17" fill="#D55E00" font-weight="700">reward</text>
+        </svg>
+          <div>
+            <table>
+              <tr><th>Environment</th><th>Load share</th></tr>
+              <tr><td><b>Balanced</b></td><td><div class="mix"><span class="e" style="flex:16">33</span><span class="u" style="flex:16">33</span><span class="m" style="flex:16">33</span></div></td></tr>
+              <tr><td><b>eMBB-int</b></td><td><div class="mix"><span class="e" style="flex:24">50</span><span class="u" style="flex:12">25</span><span class="m" style="flex:12">25</span></div></td></tr>
+              <tr><td><b>URLLC-int</b></td><td><div class="mix"><span class="e" style="flex:12">25</span><span class="u" style="flex:24">50</span><span class="m" style="flex:12">25</span></div></td></tr>
+              <tr><td><b>mMTC-int</b></td><td><div class="mix"><span class="e" style="flex:12">25</span><span class="u" style="flex:12">25</span><span class="m" style="flex:24">50</span></div></td></tr>
+            </table>
+            <p class="cap" style="margin-top:4mm">Same total load (96 %) everywhere: only the mix differs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row12">
+      <div class="card">
+        <h2><span class="n">3</span>How we measure the loss</h2>
+        <svg class="fig" style="width:86%" viewBox="0 0 560 352" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+          <defs><marker id="a2" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6675"/></marker></defs>
+          <g font-size="20" text-anchor="middle">
+            <rect x="0" y="0" width="130" height="56" rx="10" fill="#e8edf5" stroke="#123a7a" stroke-width="2.5"/><text x="65" y="36" font-weight="700" fill="#0b2a5b">Train on A</text>
+            <path d="M132 28 h26" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <circle cx="196" cy="28" r="32" fill="#123a7a"/><text x="196" y="37" font-weight="800" fill="#fff" font-size="26">π<tspan font-size="17" dy="6">A</tspan></text>
+            <path d="M230 28 h30" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <rect x="264" y="0" width="130" height="56" rx="10" fill="#fff" stroke="#b8c2cf" stroke-width="2.5"/><text x="329" y="36" font-weight="700" fill="#1b2430">eval on A</text>
+            <path d="M396 28 h26" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <rect x="426" y="0" width="134" height="56" rx="10" fill="#e8edf5"/><text x="493" y="36" font-weight="800" fill="#5b6675">D<tspan font-size="14" dy="5">AA</tspan></text>
+
+            <path d="M196 62 V100 H258" fill="none" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <text x="90" y="106" font-size="18" fill="#D55E00" font-weight="700">transferred</text>
+            <rect x="264" y="72" width="130" height="56" rx="10" fill="#fff" stroke="#D55E00" stroke-width="3"/><text x="329" y="108" font-weight="700" fill="#D55E00">eval on B</text>
+            <path d="M396 100 h26" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <rect x="426" y="72" width="134" height="56" rx="10" fill="#fbeadd" stroke="#D55E00" stroke-width="2.5"/><text x="493" y="108" font-weight="800" fill="#D55E00">D<tspan font-size="14" dy="5">AB</tspan></text>
+
+            <rect x="0" y="144" width="130" height="56" rx="10" fill="#e8edf5" stroke="#123a7a" stroke-width="2.5"/><text x="65" y="180" font-weight="700" fill="#0b2a5b">Train on B</text>
+            <path d="M132 172 h26" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <circle cx="196" cy="172" r="32" fill="#0072B2"/><text x="196" y="181" font-weight="800" fill="#fff" font-size="26">π<tspan font-size="17" dy="6">B</tspan></text>
+            <text x="196" y="138" font-size="18" fill="#0072B2" font-weight="700">native</text>
+            <path d="M230 172 h30" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <rect x="264" y="144" width="130" height="56" rx="10" fill="#fff" stroke="#0072B2" stroke-width="3"/><text x="329" y="180" font-weight="700" fill="#0072B2">eval on B</text>
+            <path d="M396 172 h26" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <rect x="426" y="144" width="134" height="56" rx="10" fill="#e3f0fa" stroke="#0072B2" stroke-width="2.5"/><text x="493" y="180" font-weight="800" fill="#0072B2">D<tspan font-size="14" dy="5">BB</tspan></text>
+
+            <rect x="0" y="214" width="560" height="62" rx="12" fill="#0b2a5b"/>
+            <text x="280" y="241" fill="#ffd166" font-weight="800" font-size="22">Performance gap on B</text>
+            <text x="280" y="266" fill="#fff" font-size="19.5">SSR(native π<tspan font-size="13" dy="4">B</tspan><tspan dy="-4">) − SSR(transferred π</tspan><tspan font-size="13" dy="4">A</tspan><tspan dy="-4">)</tspan></text>
+            <rect x="0" y="286" width="560" height="62" rx="12" fill="#123a7a"/>
+            <text x="280" y="313" fill="#ffd166" font-weight="800" font-size="22">Distributional distance</text>
+            <text x="280" y="338" fill="#fff" font-size="19.5">Wasserstein-1 (and KL) between D<tspan font-size="13" dy="4">AB</tspan><tspan dy="-4"> and D</tspan><tspan font-size="13" dy="4">BB</tspan></text>
+          </g>
+        </svg>
+        <div class="cap" style="margin-top:3mm">Gap = SSR(native) − SSR(transferred). SSR = share of SLA targets met.</div>
+      </div>
+      <div class="card">
+        <h2><span class="n">4</span>Reward &amp; agent</h2>
+        <div class="formula">R = Σ SSR − 0.1·backlog</div>
+        <p>Rewarding SLA satisfaction directly matches the evaluation metric and avoids trading SLAs for efficiency.</p>
+        <div class="need" style="margin-top:6mm"><span class="chip" style="background:#123a7a">Agent</span><span>Deep Q-Network</span><span class="chip" style="background:#123a7a">Seeds</span><span>5 per environment</span><span class="chip" style="background:#123a7a">Training</span><span>600 episodes</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="flex:1">
+      <h2><span class="n">5</span>Results</h2>
+      <div class="row3" style="flex:1">
+        <div style="display:flex;flex-direction:column">
+          <img class="fig" src="figs/gap_heatmap.svg" alt="Transfer gap heatmap">
+          <div class="cap">Gap by train (row) and test (column) environment</div>
+          <div class="takeaway">Up to 0.14 SSR lost, yet many gaps are negative</div>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <img class="fig" src="figs/noise_vs_gap.svg" alt="Gap vs seed noise">
+          <div class="cap">Transfer gap vs retraining with another seed</div>
+          <div class="takeaway">The gap is about as large as training noise</div>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <img class="fig" src="figs/policies.svg" alt="DQN vs heuristics">
+          <div class="cap">Mean SSR per environment</div>
+          <div class="takeaway">RL beats a fixed split, not always simple heuristics</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row12">
+      <div class="card concl">
+        <h2><span class="n">6</span>Conclusions</h2>
+        <ul>
+          <li>Wrong traffic mix costs <b>5–8 SSR points</b>, similar to seed noise.</li>
+          <li><b>Balanced training</b> transfers best.</li>
+          <li>Distribution distance <b>does not predict</b> the gap.</li>
+        </ul>
+        <p class="cap">Limits: single cell, DQN only. Next: PPO, mobility, more seeds.</p>
+      </div>
+      <div class="card">
+        <h2>Contributions</h2>
+        <div class="who" style="margin-bottom:3mm"><h3>Mark Zhao</h3><p>Built the simulator and RL agent; chose the parameters and assumptions</p></div>
+        <div class="who"><h3>Stanley Findsen</h3><p>Led the literature review and linked our work to current industry practice</p></div>
+      </div>
+    </div>
+  </div>
+</div></body></html>

@@ -68,8 +68,8 @@ SLA_PARAMS = {"size_range"}
 # that row moved corr(transfer gap, distributional distance) from 0.11 to 0.58.
 #
 # served_ratio fixes this because the target scales with arriving traffic: eMBB
-# must serve 80% of the work that arrives for it, so the intensive scenario
-# demands 19.2 PRB/step against balanced's 12.8. Raising min_rate would not have
+# must serve 90% of the work that arrives for it, so the intensive scenario
+# demands 21.6 PRB/step against balanced's 14.4. Raising min_rate would not have
 # worked — a higher absolute floor binds first in the environments where eMBB is
 # *least* loaded (their offered work approaches the target), inverting the
 # difficulty ordering again.
