@@ -101,6 +101,7 @@ table{font-size:21pt}th{padding:3mm 3mm}td{padding:3mm 3mm}td:first-child{white-
     <div class="people"><span><b>Mark Zhao</b> &amp; <b>Stanley Findsen</b></span><span class="dim">Supervisor: Dev Singh</span><span class="dim">University of Auckland</span></div>
   </div></div>
 
+  <div style="position:absolute;right:calc(var(--bleed) + var(--margin));bottom:calc(var(--bleed) + 5mm)"><img src="figs/logo.png" alt="University of Auckland Engineering" style="display:block;width:105mm;height:auto"></div>
   <div class="content">
     <div class="row2">
       <div class="card">
@@ -243,11 +244,11 @@ table{font-size:21pt}th{padding:3mm 3mm}td{padding:3mm 3mm}td:first-child{white-
       <h2><span class="n">5</span>Results</h2>
       <div class="row3">
         <div style="display:flex;flex-direction:column">
-          <div style="font-size:26pt;font-weight:700;color:var(--navy);line-height:1.2;margin-bottom:4mm;text-align:center">Performance loss when an AI is moved to a different traffic type</div>
+          <div style="font-size:26pt;font-weight:700;color:var(--navy);line-height:1.2;margin-bottom:4mm;text-align:center">Performance loss when an AI is moved to a different environment</div>
           <img class="fig" style="width:74%;margin:0 auto" src="figs/gap_heatmap.svg" alt="Transfer gap heatmap">
         </div>
         <div style="display:flex;flex-direction:column">
-          <div style="font-size:26pt;font-weight:700;color:var(--navy);line-height:1.2;margin-bottom:4mm;text-align:center">Performance difference from new traffic, compared with retraining the same AI</div>
+          <div style="font-size:26pt;font-weight:700;color:var(--navy);line-height:1.2;margin-bottom:4mm;text-align:center">Performance difference from new environment, compared with retraining the same AI</div>
           <img class="fig" style="width:74%;margin:0 auto" src="figs/noise_vs_gap.svg" alt="Gap vs seed noise">
         </div>
       </div>
@@ -257,8 +258,8 @@ table{font-size:21pt}th{padding:3mm 3mm}td{padding:3mm 3mm}td:first-child{white-
       <div class="card concl">
         <h2><span class="n">6</span>Conclusions</h2>
         <ul>
-          <li>An AI trained on <b>balanced traffic</b> performs as well as one retrained for each environment, so <b>there is no need to train a new model</b> every time the traffic changes.</li>
-          <li>Balanced agent transfers well across different traffic conditions.</li>
+          <li>An AI trained on <b>balanced environments</b> performs as well as one retrained for each environment, so <b>there is no need to train a new model</b> every time the environment changes.</li>
+          <li>Balanced agent transfers well across different environment conditions.</li>
         </ul>
       </div>
       <div class="card">
