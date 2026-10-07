@@ -25,8 +25,8 @@ DATA = {k: json.load(open(os.path.join(ROOT, p))) for k, p in RUNS.items()}
 BASE = json.load(open(os.path.join(ROOT, "results/baselines.json")))
 
 ENVS = ["balanced", "embb_intensive", "urllc_intensive", "mmtc_intensive"]
-LAB = {"balanced": "Balanced", "embb_intensive": "eMBB-int", "urllc_intensive": "URLLC-int", "mmtc_intensive": "mMTC-int"}
-LAB2 = {"balanced": "Balanced", "embb_intensive": "eMBB\nint", "urllc_intensive": "URLLC\nint", "mmtc_intensive": "mMTC\nint"}
+LAB = {"balanced": "Balanced", "embb_intensive": "eMBB-intensive", "urllc_intensive": "URLLC-intensive", "mmtc_intensive": "mMTC-intensive"}
+LAB2 = {"balanced": "Balanced", "embb_intensive": "eMBB" + chr(10) + "intensive", "urllc_intensive": "URLLC" + chr(10) + "intensive", "mmtc_intensive": "mMTC" + chr(10) + "intensive"}
 C_EMBB, C_URLLC, C_MMTC = "#0072B2", "#D55E00", "#009E73"
 INK, MUTED, GRID = "#1b2430", "#5b6675", "#d9dee5"
 CFG_COL = {"v1": "#7a8797", "v2": "#E69F00", "v3": "#0b3d91"}
@@ -62,7 +62,7 @@ def fig_heatmap(run="v3", name="gap_heatmap"):
     m, sig = gap_matrix(run)
     fig, ax = plt.subplots(figsize=(5.6, 3.7))
     norm = TwoSlopeNorm(vmin=-0.15, vcenter=0, vmax=0.15)
-    ax.imshow(m, cmap="RdBu_r", norm=norm, aspect="auto")
+    im = ax.imshow(m, cmap="RdBu_r", norm=norm, aspect="auto")
     for i in range(4):
         for j in range(4):
             if i == j:
@@ -71,44 +71,42 @@ def fig_heatmap(run="v3", name="gap_heatmap"):
             t = f"{m[i, j]:+.3f}" + ("*" if sig[i, j] else "")
             ax.text(j, i, t, ha="center", va="center", fontsize=17, fontweight="bold",
                     color="white" if abs(m[i, j]) > 0.085 else INK)
-    ax.set_xticks(range(4), [LAB2[e] for e in ENVS], fontsize=17)
-    ax.set_yticks(range(4), [LAB[e] for e in ENVS], fontsize=17)
+    ax.set_xticks(range(4), [LAB2[e] for e in ENVS], fontsize=13.5)
+    ax.set_yticks(range(4), [LAB[e] for e in ENVS], fontsize=15)
     ax.xaxis.tick_top()
     ax.xaxis.set_label_position("top")
-    ax.set_xlabel("Evaluated on  B", fontsize=20, labelpad=12)
-    ax.set_ylabel("Trained on  A", fontsize=20)
+    ax.set_xlabel("Tested on", fontsize=20, labelpad=12)
+    ax.set_ylabel("Trained on", fontsize=20)
     for s in ax.spines.values():
         s.set_visible(False)
     ax.tick_params(length=0)
+    cb = fig.colorbar(im, ax=ax, orientation="horizontal", fraction=0.07, pad=0.06, aspect=22)
+    cb.set_ticks([-0.15, 0, 0.15], labels=["-0.15" + chr(10) + "performance gained", "0", "+0.15" + chr(10) + "performance lost"])
+    cb.ax.tick_params(labelsize=15, length=0)
+    cb.outline.set_visible(False)
     save(fig, name)
 
 
 # ---- 2. signal vs noise ---------------------------------------------------
 def fig_noise():
-    cfgs = ["v1", "v2", "v3"]
-    gap, noise = [], []
-    for r in cfgs:
-        g = [abs(pair(r, a, b)["performance_gap"]["gap"]) for a in ENVS for b in ENVS if a != b]
-        n = [pair(r, e, e)["performance_gap"]["ssr_native_std"] for e in ENVS]
-        gap.append(np.mean(g))
-        noise.append(np.mean(n))
-    x = np.arange(3)
-    fig, ax = plt.subplots(figsize=(5.6, 3.9))
+    # v3 only: per source environment, mean |gap| of its outbound transfers vs its own seed-to-seed SD
+    gap = [np.mean([abs(pair("v3", a, b)["performance_gap"]["gap"]) for b in ENVS if b != a]) for a in ENVS]
+    noise = [pair("v3", e, e)["performance_gap"]["ssr_native_std"] for e in ENVS]
+    x = np.arange(4)
+    fig, ax = plt.subplots(figsize=(6.9, 3.2))
     w = 0.36
-    b1 = ax.bar(x - w / 2, gap, w, color="#0b3d91", label="Transfer gap (mean |gap|)")
-    b2 = ax.bar(x + w / 2, noise, w, color="#E69F00", label="Seed-to-seed SD (same env.)")
+    b1 = ax.bar(x - w / 2, gap, w, color="#0b3d91", label="Average difference on new traffic")
+    b2 = ax.bar(x + w / 2, noise, w, color="#E69F00", label="Variation from retraining the same AI")
     for b in list(b1) + list(b2):
         ax.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.002, f"{b.get_height():.3f}",
-                ha="center", va="bottom", fontsize=18, fontweight="bold")
-    for i in range(3):
-        ax.text(x[i], -0.0155, f"ratio {gap[i] / noise[i]:.2f}", ha="center", va="top", fontsize=18, color=MUTED)
-    ax.set_xticks(x, ["v1\n(3 seeds)", "v2\n(5 seeds)", "v3\n(5 seeds)"], fontsize=18)
-    ax.tick_params(axis="x", pad=44)
-    ax.set_ylabel("SSR", fontsize=20)
-    ax.set_ylim(0, 0.135)
+                ha="center", va="bottom", fontsize=14, fontweight="bold")
+    ax.set_xticks(x, [LAB2[e] for e in ENVS], fontsize=16)
+    ax.set_xlabel("Trained on", fontsize=16)
+    ax.set_ylabel("Performance difference", fontsize=16)
+    ax.set_ylim(0, 0.13)
     ax.yaxis.grid(True, color=GRID)
     ax.set_axisbelow(True)
-    ax.legend(frameon=False, fontsize=15, loc="upper center", ncol=1)
+    ax.legend(frameon=False, fontsize=14, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=1)
     save(fig, "noise_vs_gap")
     return gap, noise
 

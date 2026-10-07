@@ -79,13 +79,13 @@ h2 .n{width:17mm;height:17mm;font-size:28pt}
 .card{padding:7mm 9mm 8mm}
 .row2{display:grid;grid-template-columns:1.1fr 2fr;gap:var(--gap)}
 .row12{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
-.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+.row3{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--gap)}
 .cap{font-size:21pt}
 .takeaway{font-size:26pt;line-height:1.2}
 .big{font-size:27pt}
 .need{display:grid;grid-template-columns:auto 1fr;gap:3mm 5mm;align-items:center;margin:4mm 0}
 .chip{font-size:.85em;padding:0 3mm}
-table{font-size:24pt}
+table{font-size:21pt}th{padding:3mm 3mm}td{padding:3mm 3mm}td:first-child{white-space:nowrap}.mix{min-width:50mm}
 .mix{height:12mm;min-width:70mm}.mix span{font-size:20pt}
 .formula{font-size:34pt}
 .concl li{font-size:28pt;margin-bottom:3mm}
@@ -97,7 +97,7 @@ table{font-size:24pt}
   <div class="header"><div class="in">
     <div class="kicker">SOFTENG 700 · Project <span class="todo">102</span></div>
     <h1>When the cellular traffic changes, how much does an RL scheduler lose?</h1>
-    <div class="question">Quantifying transfer gaps in 5G RAN slicing</div>
+    <div class="question">Measuring the performance loss of AI resource allocation in 5G networks</div>
     <div class="people"><span><b>Mark Zhao</b> &amp; <b>Stanley Findsen</b></span><span class="dim">Supervisor: Dev Singh</span><span class="dim">University of Auckland</span></div>
   </div></div>
 
@@ -105,14 +105,14 @@ table{font-size:24pt}
     <div class="row2">
       <div class="card">
         <h2><span class="n">1</span>The problem</h2>
-        <p style="font-size:24pt">Every millisecond, a 5G base station must share its limited radio capacity between <b>three channels</b>, each carrying a different type of task:</p>
+        <p style="font-size:24pt">Every millisecond, a 5G base station must share its limited radio capacity between three types of task:</p>
         <div class="need" style="font-size:24pt;margin:3mm 0">
           <span class="chip e">eMBB</span><span>video and downloads</span>
           <span class="chip u">URLLC</span><span>robots and cars</span>
           <span class="chip m">mMTC</span><span>sensor readings</span>
         </div>
-        <p style="font-size:24pt">Reinforcement learning (RL) is widely proposed to make this decision automatically.</p>
-        <div class="takeaway" style="font-size:25pt">What if the traffic mix changes after training?</div>
+        <p style="font-size:24pt">Reinforcement learning (RL) is widely proposed to optimise this decision.</p>
+
       </div>
       <div class="card">
         <h2><span class="n">2</span>Simulator &amp; four environments</h2>
@@ -120,7 +120,7 @@ table{font-size:24pt}
           <svg class="fig" viewBox="0 0 596 366" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
           <defs><marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6675"/></marker><marker id="ar2" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#5b6675"/></marker><marker id="arb" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="14" refY="8" orient="auto"><path d="M0,0 L16,8 L0,16 z" fill="#0b2a5b"/></marker></defs>
           <g font-size="19" fill="#1b2430">
-            <text x="0" y="16" font-weight="700" fill="#5b6675">TRAFFIC</text>
+            <text x="0" y="16" font-weight="700" fill="#5b6675">TRAFFIC GENERATOR</text>
             <text x="200" y="16" font-weight="700" fill="#5b6675">QUEUE</text>
             
           </g>
@@ -165,7 +165,7 @@ table{font-size:24pt}
           <text x="404" y="56" font-size="20" font-weight="800" fill="#0072B2">Tasks solved</text>
           <rect x="402" y="68" width="82" height="24" rx="6" fill="#0b2a5b"/><text x="443" y="86" font-size="14.5" font-weight="800" fill="#fff" text-anchor="middle">Resource</text>
           <path d="M488 80 h12" stroke="#5b6675" stroke-width="3" marker-end="url(#ar2)"/>
-          <rect x="500" y="68" width="22" height="24" rx="4" fill="#0072B2"/><text x="511" y="86" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text><rect x="526" y="68" width="22" height="24" rx="4" fill="#0072B2"/><text x="537" y="86" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text><rect x="552" y="68" width="22" height="24" rx="4" fill="#0072B2"/><text x="563" y="86" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text>
+          <rect x="500" y="68" width="22" height="24" rx="4" fill="#0072B2"/><text x="511" y="86" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text><rect x="526" y="68" width="22" height="24" rx="4" fill="#0072B2"/><text x="537" y="86" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text><rect x="553" y="69" width="20" height="22" rx="4" fill="#fff" stroke="#0072B2" stroke-width="2"/>
           <path d="M366 154 h22" stroke="#0b2a5b" stroke-width="4" marker-end="url(#arb)"/>
           <rect x="392" y="116" width="196" height="76" rx="10" fill="#fbeadd" stroke="#D55E00" stroke-width="2.5"/>
           <text x="404" y="144" font-size="20" font-weight="800" fill="#D55E00">Tasks solved</text>
@@ -177,86 +177,78 @@ table{font-size:24pt}
           <text x="404" y="232" font-size="20" font-weight="800" fill="#009E73">Tasks solved</text>
           <rect x="402" y="244" width="82" height="24" rx="6" fill="#0b2a5b"/><text x="443" y="262" font-size="14.5" font-weight="800" fill="#fff" text-anchor="middle">Resource</text>
           <path d="M488 256 h12" stroke="#5b6675" stroke-width="3" marker-end="url(#ar2)"/>
-          <rect x="500" y="244" width="22" height="24" rx="4" fill="#009E73"/><text x="511" y="262" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text><rect x="526" y="244" width="22" height="24" rx="4" fill="#009E73"/><text x="537" y="262" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text><rect x="552" y="244" width="22" height="24" rx="4" fill="#009E73"/><text x="563" y="262" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text>
+          <rect x="500" y="244" width="22" height="24" rx="4" fill="#009E73"/><text x="511" y="262" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">✓</text><rect x="527" y="245" width="20" height="22" rx="4" fill="#fff" stroke="#009E73" stroke-width="2"/><rect x="553" y="245" width="20" height="22" rx="4" fill="#fff" stroke="#009E73" stroke-width="2"/>
           </svg>
           <div>
             <table>
-              <tr><th>Environment</th><th>Load share</th></tr>
+              <tr><th>Environment</th><th>Load share (%)</th></tr>
               <tr><td><b>Balanced</b></td><td><div class="mix"><span class="e" style="flex:16">33</span><span class="u" style="flex:16">33</span><span class="m" style="flex:16">33</span></div></td></tr>
-              <tr><td><b>eMBB-int</b></td><td><div class="mix"><span class="e" style="flex:24">50</span><span class="u" style="flex:12">25</span><span class="m" style="flex:12">25</span></div></td></tr>
-              <tr><td><b>URLLC-int</b></td><td><div class="mix"><span class="e" style="flex:12">25</span><span class="u" style="flex:24">50</span><span class="m" style="flex:12">25</span></div></td></tr>
-              <tr><td><b>mMTC-int</b></td><td><div class="mix"><span class="e" style="flex:12">25</span><span class="u" style="flex:12">25</span><span class="m" style="flex:24">50</span></div></td></tr>
+              <tr><td><b>eMBB-intensive</b></td><td><div class="mix"><span class="e" style="flex:24">50</span><span class="u" style="flex:12">25</span><span class="m" style="flex:12">25</span></div></td></tr>
+              <tr><td><b>URLLC-intensive</b></td><td><div class="mix"><span class="e" style="flex:12">25</span><span class="u" style="flex:24">50</span><span class="m" style="flex:12">25</span></div></td></tr>
+              <tr><td><b>mMTC-intensive</b></td><td><div class="mix"><span class="e" style="flex:12">25</span><span class="u" style="flex:12">25</span><span class="m" style="flex:24">50</span></div></td></tr>
             </table>
-            <p class="cap" style="margin-top:4mm">Same total load (96 %) everywhere: only the mix differs.</p>
           </div>
         </div>
       </div>
     </div>
 
     <div class="row12">
+      <div class="card" style="justify-content:space-between;padding-bottom:12mm">
+        <h2><span class="n">3</span>How the AI learns</h2>
+        <div style="font-size:31pt;line-height:1.3">
+          <p style="margin-bottom:6mm"><b style="color:#009E73">+ REWARD</b> when tasks in each task type are finished on time.</p>
+          <p style="margin-bottom:6mm"><b style="color:#D55E00">− PENALTY</b> when tasks pile up and wait in the queue.</p>
+        </div>
+        <div class="need" style="margin-top:4mm;font-size:30pt;gap:5mm 6mm"><span class="chip" style="background:#123a7a">Learns by</span><span>trial and error</span><span class="chip" style="background:#123a7a">Practice</span><span>5 separate runs per traffic mix</span><span class="chip" style="background:#123a7a">Length</span><span>600 rounds in each run</span></div>
+      </div>
       <div class="card">
-        <h2><span class="n">3</span>How we measure the loss</h2>
-        <svg class="fig" style="width:92%;margin:0 auto" viewBox="0 0 560 352" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+        <h2><span class="n">4</span>What has been measured</h2>
+        <svg class="fig" viewBox="0 -8 560 360" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
           <defs><marker id="a2" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6675"/></marker></defs>
-          <g font-size="20" text-anchor="middle">
-            <rect x="0" y="0" width="130" height="56" rx="10" fill="#e8edf5" stroke="#123a7a" stroke-width="2.5"/><text x="65" y="36" font-weight="700" fill="#0b2a5b">Train on A</text>
-            <path d="M132 28 h26" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
-            <circle cx="196" cy="28" r="32" fill="#123a7a"/><text x="196" y="37" font-weight="800" fill="#fff" font-size="26">π<tspan font-size="17" dy="6">A</tspan></text>
-            <path d="M230 28 h30" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
-            <rect x="264" y="0" width="130" height="56" rx="10" fill="#fff" stroke="#b8c2cf" stroke-width="2.5"/><text x="329" y="36" font-weight="700" fill="#1b2430">eval on A</text>
-            <path d="M396 28 h26" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
-            <rect x="426" y="0" width="134" height="56" rx="10" fill="#e8edf5"/><text x="493" y="36" font-weight="800" fill="#5b6675">D<tspan font-size="14" dy="5">AA</tspan></text>
+          <g font-size="19" text-anchor="middle">
+            <rect x="0" y="0" width="128" height="56" rx="10" fill="#e8edf5" stroke="#123a7a" stroke-width="2.5"/><text x="64" y="35" font-weight="700" fill="#0b2a5b" font-size="16.5">Learn on env A</text>
+            <path d="M130 28 h22" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <circle cx="190" cy="28" r="34" fill="#123a7a"/><text x="190" y="35" font-weight="800" fill="#fff" font-size="20">AI A</text>
+            <path d="M226 28 h30" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <rect x="260" y="0" width="128" height="56" rx="10" fill="#fff" stroke="#b8c2cf" stroke-width="2.5"/><text x="324" y="35" font-weight="700" fill="#1b2430" font-size="16.5">Tested on env A</text>
+            <path d="M390 28 h22" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <rect x="416" y="0" width="144" height="56" rx="10" fill="#e8edf5"/><text x="488" y="21" font-weight="800" fill="#5b6675" font-size="19">Performance</text><text x="488" y="44" font-weight="400" fill="#5b6675" font-size="14.5">AI A on env A</text>
 
-            <path d="M196 62 V100 H258" fill="none" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
-            <text x="90" y="106" font-size="18" fill="#D55E00" font-weight="700">transferred</text>
-            <rect x="264" y="72" width="130" height="56" rx="10" fill="#fff" stroke="#D55E00" stroke-width="3"/><text x="329" y="108" font-weight="700" fill="#D55E00">eval on B</text>
-            <path d="M396 100 h26" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
-            <rect x="426" y="72" width="134" height="56" rx="10" fill="#fbeadd" stroke="#D55E00" stroke-width="2.5"/><text x="493" y="108" font-weight="800" fill="#D55E00">D<tspan font-size="14" dy="5">AB</tspan></text>
+            <path d="M190 64 V100 H254" fill="none" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <rect x="260" y="72" width="128" height="56" rx="10" fill="#fff" stroke="#D55E00" stroke-width="3"/><text x="324" y="107" font-weight="700" fill="#D55E00" font-size="16.5">Tested on env B</text>
+            <path d="M390 100 h22" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <rect x="416" y="72" width="144" height="56" rx="10" fill="#fbeadd" stroke="#D55E00" stroke-width="2.5"/><text x="488" y="93" font-weight="800" fill="#D55E00" font-size="19">Performance</text><text x="488" y="116" font-weight="400" fill="#D55E00" font-size="14.5">AI A on env B</text>
 
-            <rect x="0" y="144" width="130" height="56" rx="10" fill="#e8edf5" stroke="#123a7a" stroke-width="2.5"/><text x="65" y="180" font-weight="700" fill="#0b2a5b">Train on B</text>
-            <path d="M132 172 h26" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
-            <circle cx="196" cy="172" r="32" fill="#0072B2"/><text x="196" y="181" font-weight="800" fill="#fff" font-size="26">π<tspan font-size="17" dy="6">B</tspan></text>
-            <text x="196" y="138" font-size="18" fill="#0072B2" font-weight="700">native</text>
-            <path d="M230 172 h30" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
-            <rect x="264" y="144" width="130" height="56" rx="10" fill="#fff" stroke="#0072B2" stroke-width="3"/><text x="329" y="180" font-weight="700" fill="#0072B2">eval on B</text>
-            <path d="M396 172 h26" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
-            <rect x="426" y="144" width="134" height="56" rx="10" fill="#e3f0fa" stroke="#0072B2" stroke-width="2.5"/><text x="493" y="180" font-weight="800" fill="#0072B2">D<tspan font-size="14" dy="5">BB</tspan></text>
+            <rect x="0" y="144" width="128" height="56" rx="10" fill="#e8edf5" stroke="#123a7a" stroke-width="2.5"/><text x="64" y="179" font-weight="700" fill="#0b2a5b" font-size="16.5">Learn on env B</text>
+            <path d="M130 172 h22" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <circle cx="190" cy="172" r="34" fill="#0072B2"/><text x="190" y="179" font-weight="800" fill="#fff" font-size="20">AI B</text>
+            <path d="M226 172 h30" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <rect x="260" y="144" width="128" height="56" rx="10" fill="#fff" stroke="#0072B2" stroke-width="3"/><text x="324" y="179" font-weight="700" fill="#0072B2" font-size="16.5">Tested on env B</text>
+            <path d="M390 172 h22" stroke="#5b6675" stroke-width="3" marker-end="url(#a2)"/>
+            <rect x="416" y="144" width="144" height="56" rx="10" fill="#e3f0fa" stroke="#0072B2" stroke-width="2.5"/><text x="488" y="165" font-weight="800" fill="#0072B2" font-size="19">Performance</text><text x="488" y="188" font-weight="400" fill="#0072B2" font-size="14.5">AI B on env B</text>
 
             <rect x="0" y="214" width="560" height="62" rx="12" fill="#0b2a5b"/>
-            <text x="280" y="241" fill="#ffd166" font-weight="800" font-size="22">Performance gap on B</text>
-            <text x="280" y="266" fill="#fff" font-size="19.5">SSR(native π<tspan font-size="13" dy="4">B</tspan><tspan dy="-4">) − SSR(transferred π</tspan><tspan font-size="13" dy="4">A</tspan><tspan dy="-4">)</tspan></text>
+            <text x="280" y="241" fill="#ffd166" font-weight="800" font-size="22">Performance loss</text>
+            <text x="280" y="266" fill="#fff" font-size="19">AI B performance minus AI A performance, both on env B</text>
             <rect x="0" y="286" width="560" height="62" rx="12" fill="#123a7a"/>
-            <text x="280" y="313" fill="#ffd166" font-weight="800" font-size="22">Distributional distance</text>
-            <text x="280" y="338" fill="#fff" font-size="19.5">Wasserstein-1 (and KL) between D<tspan font-size="13" dy="4">AB</tspan><tspan dy="-4"> and D</tspan><tspan font-size="13" dy="4">BB</tspan></text>
+            <text x="280" y="313" fill="#ffd166" font-weight="800" font-size="22">Difference in splits</text>
+            <text x="280" y="338" fill="#fff" font-size="17.5">Measured with a statistical formula of how different the splits are</text>
           </g>
         </svg>
         
       </div>
-      <div class="card" style="justify-content:space-between;padding-bottom:12mm">
-        <h2><span class="n">4</span>Reward &amp; agent</h2>
-        <div class="formula" style="font-size:40pt;padding:6mm">R = Σ SSR − 0.1·backlog</div>
-        <p><b>SSR</b> = how well each channel's quality target is met (0 to 1). Rewarding it directly matches our evaluation metric.</p>
-        <div class="need" style="margin-top:6mm;font-size:30pt;gap:5mm 6mm"><span class="chip" style="background:#123a7a">Agent</span><span>Deep Q-Network</span><span class="chip" style="background:#123a7a">Seeds</span><span>5 per environment</span><span class="chip" style="background:#123a7a">Training</span><span>600 episodes</span></div>
-      </div>
     </div>
 
-    <div class="card" style="flex:1">
+    <div class="card" style="flex:none">
       <h2><span class="n">5</span>Results</h2>
-      <div class="row3" style="flex:1">
+      <div class="row3">
         <div style="display:flex;flex-direction:column">
-          <img class="fig" src="figs/gap_heatmap.svg" alt="Transfer gap heatmap">
-          <div class="cap">Gap by train (row) and test (column) environment</div>
-          <div class="takeaway">Up to 0.14 SSR lost, yet many gaps are negative</div>
+          <div style="font-size:26pt;font-weight:700;color:var(--navy);line-height:1.2;margin-bottom:4mm;text-align:center">Performance loss when an AI is moved to a different traffic type</div>
+          <img class="fig" style="width:74%;margin:0 auto" src="figs/gap_heatmap.svg" alt="Transfer gap heatmap">
         </div>
         <div style="display:flex;flex-direction:column">
-          <img class="fig" src="figs/noise_vs_gap.svg" alt="Gap vs seed noise">
-          <div class="cap">Transfer gap vs retraining with another seed</div>
-          <div class="takeaway">The gap is about as large as training noise</div>
-        </div>
-        <div style="display:flex;flex-direction:column">
-          <img class="fig" src="figs/policies.svg" alt="DQN vs heuristics">
-          <div class="cap">Mean SSR per environment</div>
-          <div class="takeaway">RL beats a fixed split, not always simple heuristics</div>
+          <div style="font-size:26pt;font-weight:700;color:var(--navy);line-height:1.2;margin-bottom:4mm;text-align:center">Performance difference from new traffic, compared with retraining the same AI</div>
+          <img class="fig" style="width:74%;margin:0 auto" src="figs/noise_vs_gap.svg" alt="Gap vs seed noise">
         </div>
       </div>
     </div>
@@ -265,11 +257,9 @@ table{font-size:24pt}
       <div class="card concl">
         <h2><span class="n">6</span>Conclusions</h2>
         <ul>
-          <li>Wrong traffic mix costs <b>5–8 SSR points</b>, similar to seed noise.</li>
-          <li><b>Balanced training</b> transfers best.</li>
-          <li>Distribution distance <b>does not predict</b> the gap.</li>
+          <li>An AI trained on <b>balanced traffic</b> performs as well as one retrained for each environment, so <b>there is no need to train a new model</b> every time the traffic changes.</li>
+          <li>Balanced agent transfers well across different traffic conditions.</li>
         </ul>
-        <p class="cap">Limits: single cell, DQN only. Next: PPO, mobility, more seeds.</p>
       </div>
       <div class="card">
         <h2>Contributions</h2>
